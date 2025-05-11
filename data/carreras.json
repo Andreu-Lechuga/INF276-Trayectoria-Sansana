@@ -1,0 +1,16 @@
+{
+  "carreras": [
+    {
+      "nombre": "Ingeniería Civil Informática",
+      "link": "INF-VkJKWY108xSMkgzN1JGWHQunsGz2ca"
+    },
+    {
+      "nombre": "Arquitectura",
+      "link": "ARQ-woJoPPzAm04xsIhAEkzvzLbpvKrNGA"
+    },
+    {
+      "nombre": "Ingeniería Civil Matemática",
+      "link": "MAT-JTgzC6wlX1joUWoyS5NrqiixGTM4PX"
+    }
+  ]
+}
