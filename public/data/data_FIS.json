@@ -1,0 +1,424 @@
+{
+  "cursos": [
+    {
+      "nombre": "Química y Sociedad",
+      "codigo": "QUI-010",
+      "creditos": 5,
+      "horas": 5,
+      "departamento": "PC",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 1
+    },
+    {
+      "nombre": "Matemáticas I",
+      "codigo": "MAT-021",
+      "creditos": 8,
+      "horas": 8,
+      "departamento": "MAT",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 1
+    },
+    {
+      "nombre": "Física General I",
+      "codigo": "FIS-110",
+      "creditos": 6,
+      "horas": 6,
+      "departamento": "FIS",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 1
+    },
+    {
+      "nombre": "Introducción a la Física Contemporánea",
+      "codigo": "FIS-106",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "LIC",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 1
+    },
+    {
+      "nombre": "Educación Física I",
+      "codigo": "DEW-100",
+      "creditos": 2,
+      "horas": 2,
+      "departamento": "DEW",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 1
+    },
+    {
+      "nombre": "Programación",
+      "codigo": "IWI-131",
+      "creditos": 5,
+      "horas": 5,
+      "departamento": "PC",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 2
+    },
+    {
+      "nombre": "Matemáticas II",
+      "codigo": "MAT-022",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "MAT",
+      "prerrequisitos": ["MAT-021"],
+      "periodo": "A",
+      "semestre": 2
+    },
+    {
+      "nombre": "Física General III",
+      "codigo": "FIS-130",
+      "creditos": 8,
+      "horas": 8,
+      "departamento": "FIS",
+      "prerrequisitos": ["MAT-022", "FIS-110"],
+      "periodo": "A",
+      "semestre": 2
+    },
+    {
+      "nombre": "Humanístico I",
+      "codigo": "HRW-1",
+      "creditos": 3,
+      "horas": 3,
+      "departamento": "HUM",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 2
+    },
+    {
+      "nombre": "Educación Física II",
+      "codigo": "DEW-101",
+      "creditos": 2,
+      "horas": 2,
+      "departamento": "DEW",
+      "prerrequisitos": ["DEW-100"],
+      "periodo": "",
+      "semestre": 2
+    },
+    {
+      "nombre": "Instrumentación Científica",
+      "codigo": "FIS-105",
+      "creditos": 6,
+      "horas": 6,
+      "departamento": "FIS",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 2
+    },
+    {
+      "nombre": "Deportes",
+      "codigo": "DEW-0",
+      "creditos": 2,
+      "horas": 2,
+      "departamento": "DEW",
+      "prerrequisitos": ["DEW-101"],
+      "periodo": "",
+      "semestre": 3
+    },
+    {
+      "nombre": "Matemáticas III",
+      "codigo": "MAT-023",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "MAT",
+      "prerrequisitos": ["MAT-022"],
+      "periodo": "A",
+      "semestre": 3
+    },
+    {
+      "nombre": "Física General II",
+      "codigo": "FIS-120",
+      "creditos": 8,
+      "horas": 8,
+      "departamento": "FIS",
+      "prerrequisitos": ["MAT-022", "FIS-110"],
+      "periodo": "A",
+      "semestre": 3
+    },
+    {
+      "nombre": "Humanístico II",
+      "codigo": "HRW-2",
+      "creditos": 3,
+      "horas": 3,
+      "departamento": "HUM",
+      "prerrequisitos": ["HRW-1"],
+      "periodo": "",
+      "semestre": 3
+    },
+    {
+      "nombre": "Inglés I",
+      "codigo": "HCW-100",
+      "creditos": 3,
+      "horas": 3,
+      "departamento": "IN",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 3
+    },
+    {
+      "nombre": "Física Experimental",
+      "codigo": "FIS-200",
+      "creditos": 8,
+      "horas": 8,
+      "departamento": "FIS",
+      "prerrequisitos": ["FIS-120", "FIS-130", "FIS-105"],
+      "periodo": "",
+      "semestre": 3
+    },
+    {
+      "nombre": "Mecanica Intermedia I",
+      "codigo": "FIS-210",
+      "creditos": 8,
+      "horas": 8,
+      "departamento": "FIS",
+      "prerrequisitos": ["FIS-110", "MAT-023"],
+      "periodo": "P",
+      "semestre": 4
+    },
+    {
+      "nombre": "Matemáticas IV",
+      "codigo": "MAT-024",
+      "creditos": 6,
+      "horas": 6,
+      "departamento": "MAT",
+      "prerrequisitos": ["MAT-023"],
+      "periodo": "A",
+      "semestre": 4
+    },
+    {
+      "nombre": "Física General IV",
+      "codigo": "FIS-140",
+      "creditos": 8,
+      "horas": 8,
+      "departamento": "FIS",
+      "prerrequisitos": ["FIS-130", "FIS-120"],
+      "periodo": "A",
+      "semestre": 4
+    },
+    {
+      "nombre": "Probabilidad y Estadística",
+      "codigo": "MAT-041",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "MAT",
+      "prerrequisitos": ["MAT-023"],
+      "periodo": "",
+      "semestre": 4
+    },
+    {
+      "nombre": "Inglés II",
+      "codigo": "HCW-101",
+      "creditos": 3,
+      "horas": 3,
+      "departamento": "IN",
+      "prerrequisitos": ["HCW-100"],
+      "periodo": "A",
+      "semestre": 4
+    },
+    {
+      "nombre": "Mecánica Intermedia II",
+      "codigo": "FIS-211",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "FIS",
+      "prerrequisitos": ["FIS-210"],
+      "periodo": "I",
+      "semestre": 5
+    },
+    {
+      "nombre": "Métodos de la Física Matemática",
+      "codigo": "FIS-245",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "FIS",
+      "prerrequisitos": ["MAT-024"],
+      "periodo": "I",
+      "semestre": 5
+    },
+    {
+      "nombre": "Campos Electromagnéticos I",
+      "codigo": "FIS-220",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "FIS",
+      "prerrequisitos": ["FIS-120", "FIS-130", "MAT-023"],
+      "periodo": "A",
+      "semestre": 5
+    },
+    {
+      "nombre": "Termodinámica y Mecánica Estadística",
+      "codigo": "FIS-230",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "FIS",
+      "prerrequisitos": ["FIS-140", "MAT-023"],
+      "periodo": "A",
+      "semestre": 5
+    },
+    {
+      "nombre": "Inglés III",
+      "codigo": "HCW-102",
+      "creditos": 3,
+      "horas": 3,
+      "departamento": "IN",
+      "prerrequisitos": ["HCW-101"],
+      "periodo": "A",
+      "semestre": 5
+    },
+    {
+      "nombre": "Física Cuántica I",
+      "codigo": "FIS-242",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "FIS",
+      "prerrequisitos": ["FIS-140", "FIS-210"],
+      "periodo": "P",
+      "semestre": 6
+    },
+    {
+      "nombre": "Física Experimental Avanzada",
+      "codigo": "FIS-201",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "FIS",
+      "prerrequisitos": ["FIS-200", "FIS-230"],
+      "periodo": "P",
+      "semestre": 6
+    },
+    {
+      "nombre": "Campos Electromagnéticos II",
+      "codigo": "FIS-221",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "FIS",
+      "prerrequisitos": ["FIS-220"],
+      "periodo": "A",
+      "semestre": 6
+    },
+    {
+      "nombre": "Análsis Numérico",
+      "codigo": "MAT-270",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "MAT",
+      "prerrequisitos": ["MAT-024"],
+      "periodo": "A",
+      "semestre": 6
+    },
+    {
+      "nombre": "Inglés IV",
+      "codigo": "HCW-200",
+      "creditos": 3,
+      "horas": 3,
+      "departamento": "IN",
+      "prerrequisitos": ["HCW-102"],
+      "periodo": "A",
+      "semestre": 6
+    },
+    {
+      "nombre": "Física Cuántica II",
+      "codigo": "FIS-243",
+      "creditos": 4,
+      "horas": 0,
+      "departamento": "FIS",
+      "prerrequisitos": ["FIS-140", "FIS-242"],
+      "periodo": "",
+      "semestre": 7
+    },
+    {
+      "nombre": "El Método Científico",
+      "codigo": "HAF-101",
+      "creditos": 3,
+      "horas": 3,
+      "departamento": "LIC",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 7
+    },
+    {
+      "nombre": "Física Computacional",
+      "codigo": "FIS-205",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "FIS",
+      "prerrequisitos": ["MAT-270"],
+      "periodo": "I",
+      "semestre": 7
+    },
+    {
+      "nombre": "Introducción a la Física de Alta Energía",
+      "codigo": "FIS-270",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "FIS",
+      "prerrequisitos": [],
+      "periodo": "I",
+      "semestre": 7
+    },
+    {
+      "nombre": "Optativo Avanzando I",
+      "codigo": "FIS-11",
+      "creditos": 6,
+      "horas": 6,
+      "departamento": "FIS",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 7
+    },
+    {
+      "nombre": "Optativo Avanzando II",
+      "codigo": "FIS-12",
+      "creditos": 6,
+      "horas": 6,
+      "departamento": "FIS",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 8
+    },
+    {
+      "nombre": "Optativo Avanzando III",
+      "codigo": "FIS-13",
+      "creditos": 6,
+      "horas": 6,
+      "departamento": "FIS",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 8
+    },
+    {
+      "nombre": "Optativo Avanzando IV",
+      "codigo": "FIS-14",
+      "creditos": 6,
+      "horas": 6,
+      "departamento": "FIS",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 8
+    },
+    {
+      "nombre": "Introducción a la Física de Materia Condensada",
+      "codigo": "FIS-251",
+      "creditos": 7,
+      "horas": 7,
+      "departamento": "LIC",
+      "prerrequisitos": [],
+      "periodo": "P",
+      "semestre": 8
+    },
+    {
+      "nombre": "Seminario de Grado",
+      "codigo": "FIS-299",
+      "creditos": 5,
+      "horas": 5,
+      "departamento": "LIC",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 8
+    }
+  ]
+}

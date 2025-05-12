@@ -1,0 +1,594 @@
+{
+  "cursos": [
+    {
+      "nombre": "Matemáticas I",
+      "codigo": "MAT-021",
+      "creditos": 5,
+      "horas": 8,
+      "departamento": "PC",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 1
+    },
+    {
+      "nombre": "Programación",
+      "codigo": "IWI-131",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "CI",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 1
+    },
+    {
+      "nombre": "Introducción a la Física",
+      "codigo": "FIS-100",
+      "creditos": 3,
+      "horas": 6,
+      "departamento": "PC",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 1
+    },
+    {
+      "nombre": "Introducción a la Ingeniería",
+      "codigo": "IWG-101",
+      "creditos": 2,
+      "horas": 0,
+      "departamento": "IAA",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 1
+    },
+    {
+      "nombre": "Humanístico I",
+      "codigo": "HRW-101",
+      "creditos": 2,
+      "horas": 0,
+      "departamento": "FC",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 1
+    },
+    {
+      "nombre": "Educación Física I",
+      "codigo": "DEW-100",
+      "creditos": 1,
+      "horas": 0,
+      "departamento": "DEW",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 1
+    },
+    {
+      "nombre": "Matemáticas II",
+      "codigo": "MAT-022",
+      "creditos": 5,
+      "horas": 7,
+      "departamento": "PC",
+      "prerrequisitos": ["MAT-021"],
+      "periodo": "A",
+      "semestre": 2
+    },
+    {
+      "nombre": "Física General I",
+      "codigo": "FIS-110",
+      "creditos": 5,
+      "horas": 8,
+      "departamento": "PC",
+      "prerrequisitos": ["MAT-021", "FIS-100"],
+      "periodo": "A",
+      "semestre": 2
+    },
+    {
+      "nombre": "Química y Sociedad",
+      "codigo": "QUI-010",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "PC",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 2
+    },
+    {
+      "nombre": "Humanístico II",
+      "codigo": "HRW-102",
+      "creditos": 2,
+      "horas": 0,
+      "departamento": "FC",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 2
+    },
+    {
+      "nombre": "Inglés 1",
+      "codigo": "HCW-100",
+      "creditos": 2,
+      "horas": 0,
+      "departamento": "ENG",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 2
+    },
+    {
+      "nombre": "Educación Física II",
+      "codigo": "DEW-101",
+      "creditos": 1,
+      "horas": 0,
+      "departamento": "DEW",
+      "prerrequisitos": ["DEW-100"],
+      "periodo": "",
+      "semestre": 2
+    },
+    {
+      "nombre": "Matemáticas III",
+      "codigo": "MAT-023",
+      "creditos": 4,
+      "horas": 7,
+      "departamento": "PC",
+      "prerrequisitos": ["MAT-022"],
+      "periodo": "A",
+      "semestre": 3
+    },
+    {
+      "nombre": "Física General II",
+      "codigo": "FIS-120",
+      "creditos": 4,
+      "horas": 8,
+      "departamento": "PC",
+      "prerrequisitos": ["MAT-022", "FIS-110"],
+      "periodo": "A",
+      "semestre": 3
+    },
+    {
+      "nombre": "Estructura de Datos y Algoritmos",
+      "codigo": "ELO-320",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "CI",
+      "prerrequisitos": ["IWI-131"],
+      "periodo": "",
+      "semestre": 3
+    },
+    {
+      "nombre": "Inglés 2",
+      "codigo": "HCW-101",
+      "creditos": 2,
+      "horas": 0,
+      "departamento": "ENG",
+      "prerrequisitos": ["HCW-100"],
+      "periodo": "",
+      "semestre": 3
+    },
+    {
+      "nombre": "Álgebra Lineal I",
+      "codigo": "MAT-210",
+      "creditos": 4,
+      "horas": 6,
+      "departamento": "ICMATB",
+      "prerrequisitos": ["MAT-022"],
+      "periodo": "I",
+      "semestre": 3
+    },
+    {
+      "nombre": "Introducción a la Matemática Avanzada",
+      "codigo": "MAT-125",
+      "creditos": 4,
+      "horas": 6,
+      "departamento": "ICMATB",
+      "prerrequisitos": ["MAT-022"],
+      "periodo": "P",
+      "semestre": 4
+    },
+    {
+      "nombre": "Probabilidades y Estadística",
+      "codigo": "MAT-041",
+      "creditos": 4,
+      "horas": 0,
+      "departamento": "CI",
+      "prerrequisitos": ["MAT-023"],
+      "periodo": "",
+      "semestre": 4
+    },
+    {
+      "nombre": "Matemáticas IV",
+      "codigo": "MAT-024",
+      "creditos": 4,
+      "horas": 6,
+      "departamento": "PC",
+      "prerrequisitos": ["MAT-023"],
+      "periodo": "A",
+      "semestre": 4
+    },
+    {
+      "nombre": "Física General III",
+      "codigo": "FIS-130",
+      "creditos": 4,
+      "horas": 8,
+      "departamento": "PC",
+      "prerrequisitos": ["MAT-022", "FIS-110"],
+      "periodo": "A",
+      "semestre": 4
+    },
+    {
+      "nombre": "Inglés 3",
+      "codigo": "HCW-102",
+      "creditos": 2,
+      "horas": 0,
+      "departamento": "ENG",
+      "prerrequisitos": ["HCW-101"],
+      "periodo": "",
+      "semestre": 4
+    },
+    {
+      "nombre": "Análisis I",
+      "codigo": "MAT-225",
+      "creditos": 4,
+      "horas": 6,
+      "departamento": "ICMATB",
+      "prerrequisitos": ["MAT-125", "MAT-023"],
+      "periodo": "I",
+      "semestre": 5
+    },
+    {
+      "nombre": "Estructuras Algebraicas",
+      "codigo": "MAT-214",
+      "creditos": 4,
+      "horas": 6,
+      "departamento": "ICMATB",
+      "prerrequisitos": ["MAT-210"],
+      "periodo": "I",
+      "semestre": 5
+    },
+    {
+      "nombre": "Física General IV",
+      "codigo": "FIS-140",
+      "creditos": 4,
+      "horas": 8,
+      "departamento": "PC",
+      "prerrequisitos": ["FIS-130", "FIS-120"],
+      "periodo": "A",
+      "semestre": 5
+    },
+    {
+      "nombre": "Análisis Numérico I",
+      "codigo": "MAT-270",
+      "creditos": 4,
+      "horas": 0,
+      "departamento": "CI",
+      "prerrequisitos": ["MAT-024", "IWI-131"],
+      "periodo": "",
+      "semestre": 5
+    },
+    {
+      "nombre": "Inglés 4",
+      "codigo": "HCW-103",
+      "creditos": 2,
+      "horas": 0,
+      "departamento": "ENG",
+      "prerrequisitos": ["HCW-102"],
+      "periodo": "",
+      "semestre": 5
+    },
+    {
+      "nombre": "Análisis II",
+      "codigo": "MAT-226",
+      "creditos": 4,
+      "horas": 6,
+      "departamento": "ICMATB",
+      "prerrequisitos": ["MAT-225"],
+      "periodo": "P",
+      "semestre": 6
+    },
+    {
+      "nombre": "Variable Compleja",
+      "codigo": "MAT-235",
+      "creditos": 4,
+      "horas": 5,
+      "departamento": "ICMATB",
+      "prerrequisitos": ["MAT-024"],
+      "periodo": "P",
+      "semestre": 6
+    },
+    {
+      "nombre": "EDO",
+      "codigo": "MAT-243",
+      "creditos": 4,
+      "horas": 6,
+      "departamento": "ICMATA",
+      "prerrequisitos": ["MAT-210", "MAT-125"],
+      "periodo": "P",
+      "semestre": 6
+    },
+    {
+      "nombre": "Laboratorio de Modelación I",
+      "codigo": "MAT-282",
+      "creditos": 3,
+      "horas": 6,
+      "departamento": "IAA",
+      "prerrequisitos": ["MAT-270", "ELO-320", "MAT-041"],
+      "periodo": "P",
+      "semestre": 6
+    },
+    {
+      "nombre": "Fund. Investigaciones Operaciones",
+      "codigo": "ILI-281",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "CI",
+      "prerrequisitos": ["MAT-041"],
+      "periodo": "",
+      "semestre": 6
+    },
+    {
+      "nombre": "Análisis III",
+      "codigo": "MAT-277",
+      "creditos": 4,
+      "horas": 6,
+      "departamento": "ICMATB",
+      "prerrequisitos": ["MAT-226"],
+      "periodo": "I",
+      "semestre": 7
+    },
+    {
+      "nombre": "Análisis Numérico II",
+      "codigo": "MAT-274",
+      "creditos": 4,
+      "horas": 5,
+      "departamento": "ICMATA",
+      "prerrequisitos": ["MAT-270"],
+      "periodo": "I",
+      "semestre": 7
+    },
+    {
+      "nombre": "Teo. de Prob. y Proc. Estocásticos",
+      "codigo": "MAT-263",
+      "creditos": 4,
+      "horas": 6,
+      "departamento": "ICMATA",
+      "prerrequisitos": ["MAT-226", "MAT-041"],
+      "periodo": "I",
+      "semestre": 7
+    },
+    {
+      "nombre": "Electivo de Ingeniería 1",
+      "codigo": "EI-1",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "ELI",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 7
+    },
+    {
+      "nombre": "Electivo de Gestión 1",
+      "codigo": "EG-1",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "ELG",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 7
+    },
+    {
+      "nombre": "Optimización no Lineal",
+      "codigo": "MAT-279",
+      "creditos": 4,
+      "horas": 0,
+      "departamento": "ICMATA",
+      "prerrequisitos": ["ILI-281", "MAT-225"],
+      "periodo": "",
+      "semestre": 8
+    },
+    {
+      "nombre": "EDP",
+      "codigo": "MAT-247",
+      "creditos": 4,
+      "horas": 6,
+      "departamento": "ICMATA",
+      "prerrequisitos": ["MAT-235", "MAT-277", "MAT-243"],
+      "periodo": "P",
+      "semestre": 8
+    },
+    {
+      "nombre": "Inferencia Estadística",
+      "codigo": "MAT-206",
+      "creditos": 4,
+      "horas": 5,
+      "departamento": "ICMATA",
+      "prerrequisitos": ["MAT-263"],
+      "periodo": "P",
+      "semestre": 8
+    },
+    {
+      "nombre": "Aplic. Matemática Ingeniería",
+      "codigo": "MAT-281",
+      "creditos": 3,
+      "horas": 4,
+      "departamento": "IAA",
+      "prerrequisitos": ["ELO-320", "MAT-225", "MAT-270"],
+      "periodo": "P",
+      "semestre": 8
+    },
+    {
+      "nombre": "Electivo de Ingeniería 2",
+      "codigo": "EI-2",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "ELI",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 8
+    },
+    {
+      "nombre": "Optimización y Control",
+      "codigo": "MAT-379",
+      "creditos": 4,
+      "horas": 5,
+      "departamento": "ICMATA",
+      "prerrequisitos": ["MAT-226", "MAT-243"],
+      "periodo": "I",
+      "semestre": 9
+    },
+    {
+      "nombre": "Matemática Discreta",
+      "codigo": "MAT-215",
+      "creditos": 4,
+      "horas": 5,
+      "departamento": "ICMATA",
+      "prerrequisitos": ["MAT-214"],
+      "periodo": "I",
+      "semestre": 9
+    },
+    {
+      "nombre": "Análisis Numérico de EDP",
+      "codigo": "MAT-227",
+      "creditos": 4,
+      "horas": 5,
+      "departamento": "ICMATA",
+      "prerrequisitos": ["MAT-247", "MAT-274"],
+      "periodo": "I",
+      "semestre": 9
+    },
+    {
+      "nombre": "Electivo de Ingeniería 3",
+      "codigo": "EI-3",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "ELI",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 9
+    },
+    {
+      "nombre": "Electivo de Gestión 2",
+      "codigo": "EG-2",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "ELG",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 9
+    },
+    {
+      "nombre": "Electivo Proyectos de Ingeniería",
+      "codigo": "EP",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "IAA",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 10
+    },
+    {
+      "nombre": "Electivo de Ingeniería 4",
+      "codigo": "EI-4",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "ELI",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 10
+    },
+    {
+      "nombre": "Electivo de Ingeniería 5",
+      "codigo": "EI-5",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "ELI",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 10
+    },
+    {
+      "nombre": "Humanístico III",
+      "codigo": "HRW-103",
+      "creditos": 2,
+      "horas": 0,
+      "departamento": "FC",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 10
+    },
+    {
+      "nombre": "Electivo de Gestión 3",
+      "codigo": "EG-3",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "ELG",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 10
+    },
+    {
+      "nombre": "Proyecto de Memoria de Titulo",
+      "codigo": "MAT-301",
+      "creditos": 2,
+      "horas": 0,
+      "departamento": "IAA",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 11
+    },
+    {
+      "nombre": "Laboratorio de Modelación II",
+      "codigo": "MAT-283",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "IAA",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 11
+    },
+    {
+      "nombre": "Electivo de Ingeniería 6",
+      "codigo": "EI-6",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "ELI",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 11
+    },
+    {
+      "nombre": "Electivo de Formación Complementario",
+      "codigo": "COM-1",
+      "creditos": 1,
+      "horas": 0,
+      "departamento": "COMP",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 11
+    },
+    {
+      "nombre": "Electivo de Gestión 4",
+      "codigo": "EG-4",
+      "creditos": 3,
+      "horas": 0,
+      "departamento": "ELG",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 11
+    },
+    {
+      "nombre": "Memoria de Titulo",
+      "codigo": "MAT-308",
+      "creditos": 8,
+      "horas": 0,
+      "departamento": "IAA",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 12
+    },
+    {
+      "nombre": "Electivo de Formación Complementario",
+      "codigo": "COM-2",
+      "creditos": 1,
+      "horas": 0,
+      "departamento": "COMP",
+      "prerrequisitos": [],
+      "periodo": "",
+      "semestre": 12
+    }
+  ]
+}

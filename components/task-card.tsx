@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { Calendar, CheckSquare, Copy, BookOpen, Hash, Award, Tag, Clock, Building } from 'lucide-react'
+import { Calendar, CheckSquare, Copy, BookOpen, Hash, Award, Clock, Building } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Task } from "@/types/kanban"
 import { formatDate } from "@/lib/utils"
@@ -85,7 +85,13 @@ export default function TaskCard({ task, onClick, onDuplicate }: TaskCardProps) 
         {task.periodo && (
           <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded-md">
             <Calendar className="h-3 w-3 mr-1" />
-            Periodo {task.periodo}
+            {task.periodo === "A"
+              ? "Anual"
+              : task.periodo === "P"
+                ? "Primavera"
+                : task.periodo === "I"
+                  ? "Invierno"
+                  : `Periodo ${task.periodo}`}
           </div>
         )}
 

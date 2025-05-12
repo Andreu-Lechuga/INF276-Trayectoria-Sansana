@@ -1,0 +1,594 @@
+{
+  "cursos": [
+    {
+      "nombre": "Programación",
+      "codigo": "IWI-131",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "FI",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 1
+    },
+    {
+      "nombre": "Matemáticas I",
+      "codigo": "MAT-021",
+      "creditos": 5,
+      "horas": 8,
+      "departamento": "PC",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 1
+    },
+    {
+      "nombre": "Introducción a la Física",
+      "codigo": "FIS-100",
+      "creditos": 3,
+      "horas": 6,
+      "departamento": "PC",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 1
+    },
+    {
+      "nombre": "Humanístico I",
+      "codigo": "HRW-132",
+      "creditos": 2,
+      "horas": 3,
+      "departamento": "HUM",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 1
+    },
+    {
+      "nombre": "Educación Física I",
+      "codigo": "DEW-100",
+      "creditos": 1,
+      "horas": 2,
+      "departamento": "HUM",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 1
+    },
+    {
+      "nombre": "Química y Sociedad",
+      "codigo": "QUI-010",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "PC",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 2
+    },
+    {
+      "nombre": "Matemáticas II",
+      "codigo": "MAT-022",
+      "creditos": 5,
+      "horas": 7,
+      "departamento": "PC",
+      "prerrequisitos": ["MAT-021"],
+      "periodo": "A",
+      "semestre": 2
+    },
+    {
+      "nombre": "Física General I",
+      "codigo": "FIS-110",
+      "creditos": 5,
+      "horas": 8,
+      "departamento": "PC",
+      "prerrequisitos": ["MAT-021", "FIS-100"],
+      "periodo": "A",
+      "semestre": 2
+    },
+    {
+      "nombre": "Introducción a la Ingeniería",
+      "codigo": "IWG-101",
+      "creditos": 2,
+      "horas": 3,
+      "departamento": "TIN",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 2
+    },
+    {
+      "nombre": "Humanístico II",
+      "codigo": "HRW-133",
+      "creditos": 2,
+      "horas": 3,
+      "departamento": "HUM",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 2
+    },
+    {
+      "nombre": "Educación Física II",
+      "codigo": "DEW-101",
+      "creditos": 1,
+      "horas": 2,
+      "departamento": "HUM",
+      "prerrequisitos": ["DEW-100"],
+      "periodo": "A",
+      "semestre": 2
+    },
+    {
+      "nombre": "Estructuras de Datos",
+      "codigo": "INF-134",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "FI",
+      "prerrequisitos": ["IWI-131"],
+      "periodo": "A",
+      "semestre": 3
+    },
+    {
+      "nombre": "Matemáticas III",
+      "codigo": "MAT-023",
+      "creditos": 4,
+      "horas": 7,
+      "departamento": "PC",
+      "prerrequisitos": ["MAT-022"],
+      "periodo": "A",
+      "semestre": 3
+    },
+    {
+      "nombre": "Física General III",
+      "codigo": "FIS-130",
+      "creditos": 4,
+      "horas": 8,
+      "departamento": "PC",
+      "prerrequisitos": ["MAT-022", "FIS-110"],
+      "periodo": "A",
+      "semestre": 3
+    },
+    {
+      "nombre": "Estructuras Discretas",
+      "codigo": "INF-152",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "FI",
+      "prerrequisitos": ["IWI-131", "MAT-021"],
+      "periodo": "A",
+      "semestre": 3
+    },
+    {
+      "nombre": "Teoría de Sistemas",
+      "codigo": "INF-260",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "SD",
+      "prerrequisitos": ["IWG-101"],
+      "periodo": "A",
+      "semestre": 3
+    },
+    {
+      "nombre": "Libre I",
+      "codigo": "INF-1",
+      "creditos": 1,
+      "horas": 2,
+      "departamento": "HUM",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 3
+    },
+    {
+      "nombre": "Lenguajes de Programación",
+      "codigo": "INF-253",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "FI",
+      "prerrequisitos": ["INF-134"],
+      "periodo": "A",
+      "semestre": 4
+    },
+    {
+      "nombre": "Matemáticas IV",
+      "codigo": "MAT-024",
+      "creditos": 4,
+      "horas": 6,
+      "departamento": "PC",
+      "prerrequisitos": ["MAT-023"],
+      "periodo": "A",
+      "semestre": 4
+    },
+    {
+      "nombre": "Física General II",
+      "codigo": "FIS-120",
+      "creditos": 4,
+      "horas": 8,
+      "departamento": "PC",
+      "prerrequisitos": ["MAT-022", "FIS-110"],
+      "periodo": "A",
+      "semestre": 4
+    },
+    {
+      "nombre": "Informática Teórica",
+      "codigo": "INF-155",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "FI",
+      "prerrequisitos": ["INF-134", "INF-152"],
+      "periodo": "A",
+      "semestre": 4
+    },
+    {
+      "nombre": "Economía IA",
+      "codigo": "IWN-170",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "IND",
+      "prerrequisitos": ["MAT-023"],
+      "periodo": "A",
+      "semestre": 4
+    },
+    {
+      "nombre": "Libre II",
+      "codigo": "INF-2",
+      "creditos": 1,
+      "horas": 2,
+      "departamento": "HUM",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 4
+    },
+    {
+      "nombre": "Bases de Datos",
+      "codigo": "INF-239",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "IS",
+      "prerrequisitos": ["INF-134"],
+      "periodo": "A",
+      "semestre": 5
+    },
+    {
+      "nombre": "Arquitectura y Organización de Computadores",
+      "codigo": "INF-245",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "TIC",
+      "prerrequisitos": ["INF-134"],
+      "periodo": "A",
+      "semestre": 5
+    },
+    {
+      "nombre": "Física General IV",
+      "codigo": "FIS-140",
+      "creditos": 4,
+      "horas": 8,
+      "departamento": "PC",
+      "prerrequisitos": ["FIS-130", "FIS-120"],
+      "periodo": "A",
+      "semestre": 5
+    },
+    {
+      "nombre": "Estadística Computacional",
+      "codigo": "INF-280",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "AN",
+      "prerrequisitos": ["IWI-131", "MAT-023"],
+      "periodo": "A",
+      "semestre": 5
+    },
+    {
+      "nombre": "Organizaciones y Sistemas de Información",
+      "codigo": "INF-270",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "SD",
+      "prerrequisitos": ["INF-260"],
+      "periodo": "A",
+      "semestre": 5
+    },
+    {
+      "nombre": "Libre III",
+      "codigo": "INF-3",
+      "creditos": 1,
+      "horas": 2,
+      "departamento": "HUM",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 5
+    },
+    {
+      "nombre": "Análisis y Diseño de Software",
+      "codigo": "INF-236",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "IS",
+      "prerrequisitos": ["INF-239", "INF-253"],
+      "periodo": "A",
+      "semestre": 6
+    },
+    {
+      "nombre": "Sistemas Operativos",
+      "codigo": "INF-246",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "TIC",
+      "prerrequisitos": ["INF-245"],
+      "periodo": "A",
+      "semestre": 6
+    },
+    {
+      "nombre": "Ingeniería, Informática y Sociedad",
+      "codigo": "INF-276",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "TIN",
+      "prerrequisitos": ["INF-270"],
+      "periodo": "A",
+      "semestre": 6
+    },
+    {
+      "nombre": "Algoritmos y Complejidad",
+      "codigo": "INF-221",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "FI",
+      "prerrequisitos": ["INF-152", "INF-253"],
+      "periodo": "A",
+      "semestre": 6
+    },
+    {
+      "nombre": "Optimización",
+      "codigo": "INF-292",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "SD",
+      "prerrequisitos": ["IWI-131", "MAT-023"],
+      "periodo": "A",
+      "semestre": 6
+    },
+    {
+      "nombre": "Libre IV",
+      "codigo": "INF-4",
+      "creditos": 1,
+      "horas": 2,
+      "departamento": "HUM",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 6
+    },
+    {
+      "nombre": "Ingeniería de Software",
+      "codigo": "INF-225",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "IS",
+      "prerrequisitos": ["INF-236"],
+      "periodo": "A",
+      "semestre": 7
+    },
+    {
+      "nombre": "Redes de Computadores",
+      "codigo": "INF-256",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "TIC",
+      "prerrequisitos": ["INF-246"],
+      "periodo": "A",
+      "semestre": 7
+    },
+    {
+      "nombre": "Información y Matemáticas Financieras",
+      "codigo": "ICN-270",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "IND",
+      "prerrequisitos": ["IWN-170"],
+      "periodo": "A",
+      "semestre": 7
+    },
+    {
+      "nombre": "Computación Científica",
+      "codigo": "INF-285",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "AN",
+      "prerrequisitos": ["MAT-024", "INF-221"],
+      "periodo": "A",
+      "semestre": 7
+    },
+    {
+      "nombre": "Investigación de Operaciones",
+      "codigo": "INF-293",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "SD",
+      "prerrequisitos": ["INF-280", "INF-292"],
+      "periodo": "A",
+      "semestre": 7
+    },
+    {
+      "nombre": "Libre V",
+      "codigo": "INF-5",
+      "creditos": 1,
+      "horas": 2,
+      "departamento": "HUM",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 7
+    },
+    {
+      "nombre": "Diseño Interfaces Usuarias",
+      "codigo": "INF-322",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "IS",
+      "prerrequisitos": ["INF-225"],
+      "periodo": "P",
+      "semestre": 8
+    },
+    {
+      "nombre": "Sistemas Distribuidos",
+      "codigo": "INF-343",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "TIC",
+      "prerrequisitos": ["INF-256"],
+      "periodo": "A",
+      "semestre": 8
+    },
+    {
+      "nombre": "Electivo Informática I",
+      "codigo": "INF-301",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "ELEC",
+      "prerrequisitos": [],
+      "periodo": "P",
+      "semestre": 8
+    },
+    {
+      "nombre": "Inteligencia Artificial",
+      "codigo": "INF-295",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "AN",
+      "prerrequisitos": ["INF-292", "INF-134"],
+      "periodo": "A",
+      "semestre": 8
+    },
+    {
+      "nombre": "Sistemas de Gestión",
+      "codigo": "INF-266",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "SD",
+      "prerrequisitos": ["INF-276"],
+      "periodo": "P",
+      "semestre": 8
+    },
+    {
+      "nombre": "Libre VI",
+      "codigo": "INF-6",
+      "creditos": 1,
+      "horas": 2,
+      "departamento": "HUM",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 8
+    },
+    {
+      "nombre": "Electivo Informática II",
+      "codigo": "INF-302",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "ELEC",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 9
+    },
+    {
+      "nombre": "Electivo Informática III",
+      "codigo": "INF-303",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "ELEC",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 9
+    },
+    {
+      "nombre": "Electivo I",
+      "codigo": "INF-311",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "ELEC",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 9
+    },
+    {
+      "nombre": "Electivo II",
+      "codigo": "INF-312",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "ELEC",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 9
+    },
+    {
+      "nombre": "Gestión de Proyectos de Informática",
+      "codigo": "INF-360",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "SD",
+      "prerrequisitos": ["INF-322", "INF-266"],
+      "periodo": "I",
+      "semestre": 9
+    },
+    {
+      "nombre": "Libre VII",
+      "codigo": "INF-7",
+      "creditos": 1,
+      "horas": 2,
+      "departamento": "HUM",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 9
+    },
+    {
+      "nombre": "Electivo Informática IV",
+      "codigo": "INF-304",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "ELEC",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 10
+    },
+    {
+      "nombre": "Electivo III",
+      "codigo": "INF-313",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "ELEC",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 10
+    },
+    {
+      "nombre": "Electivo IV",
+      "codigo": "INF-314",
+      "creditos": 3,
+      "horas": 5,
+      "departamento": "ELEC",
+      "prerrequisitos": [],
+      "periodo": "A",
+      "semestre": 10
+    },
+    {
+      "nombre": "Taller Desarrollo de Proyecto de Informática",
+      "codigo": "INF-228",
+      "creditos": 6,
+      "horas": 10,
+      "departamento": "TIN",
+      "prerrequisitos": ["INF-360"],
+      "periodo": "P",
+      "semestre": 10
+    },
+    {
+      "nombre": "Trabajo de Título 1",
+      "codigo": "INF-309",
+      "creditos": 1,
+      "horas": 2,
+      "departamento": "TIN",
+      "prerrequisitos": ["INF-360"],
+      "periodo": "A",
+      "semestre": 10
+    },
+    {
+      "nombre": "Trabajo de Título 2",
+      "codigo": "INF-310",
+      "creditos": 12,
+      "horas": 20,
+      "departamento": "TIN",
+      "prerrequisitos": ["INF-228", "INF-309"],
+      "periodo": "A",
+      "semestre": 11
+    }
+  ]
+}

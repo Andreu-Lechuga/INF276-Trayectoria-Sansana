@@ -5,55 +5,91 @@ import { ThemeToggle } from "./theme-toggle"
 import KanbanBoard from "./kanban-board"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Menu, X, Search, ChevronLeft, ChevronRight } from "lucide-react"
+import { Menu, X, Search, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react"
 import type { Task } from "@/types/kanban"
+import { useToast } from "@/hooks/use-toast"
 
-// Importar los datos de carreras
-import carrerasData from "@/data/carreras.json"
+// Eliminar la importación directa del archivo JSON
+// import carrerasData from "@/public/data/carreras.json"
 
 export default function AppContainer() {
+  const { toast } = useToast()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
   const [allTasks, setAllTasks] = useState<Task[]>([])
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Agregar estado para la carrera seleccionada
-  const [selectedCarrera, setSelectedCarrera] = useState(carrerasData.carreras[0])
+  // Agregar estado para las carreras y la carrera seleccionada
+  const [carreras, setCarreras] = useState<{ nombre: string; link: string }[]>([])
+  const [selectedCarrera, setSelectedCarrera] = useState<{ nombre: string; link: string } | null>(null)
 
-  // Initialize tasks from courses data
-  // useEffect(() => {
-  //   // Convert courses data to Task objects
-  //   const tasks: Task[] = coursesData.map((course: any) => ({
-  //     id: course.id,
-  //     title: course.nombre,
-  //     description: "",
-  //     status: course.status,
-  //     dueDate: null,
-  //     subtasks: [],
-  //     customFields: [],
-  //     createdAt: new Date().toISOString(),
-  //     nombre: course.nombre,
-  //     sigla: course.sigla,
-  //     creditos: course.creditos,
-  //     categoria: course.categoria,
-  //     prerequisitos: course.prerequisitos,
-  //     semestre: course.semestre,
-  //   }))
+  // Añadir estado para el filtro de departamento
+  const [departmentFilter, setDepartmentFilter] = useState<string>("")
+  const [departments, setDepartments] = useState<string[]>([])
 
-  //   setAllTasks(tasks)
-  //   setFilteredTasks(tasks)
-  // }, [])
+  // Cargar las carreras al inicio
+  useEffect(() => {
+    const loadCarreras = async () => {
+      try {
+        const response = await fetch("/data/carreras.json")
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status} ${response.statusText}`)
+        }
 
-  // Función para cargar los datos de una carrera
-  const loadCarreraData = async (carreraLink: string) => {
-    try {
-      // Usar fetch en lugar de import dinámico
-      const response = await fetch(`/data/data_${carreraLink}.json`)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const data = await response.json()
+        if (!data || !data.carreras || !Array.isArray(data.carreras)) {
+          throw new Error("Formato de datos inválido: no se encontraron carreras")
+        }
+
+        setCarreras(data.carreras)
+        // Establecer la primera carrera como seleccionada por defecto
+        if (data.carreras.length > 0) {
+          setSelectedCarrera(data.carreras[0])
+        }
+      } catch (error) {
+        console.error("Error loading carreras:", error)
+        setError(error instanceof Error ? error.message : "Error desconocido al cargar las carreras")
+        toast({
+          title: "Error al cargar carreras",
+          description: `No se pudieron cargar las carreras: ${error instanceof Error ? error.message : error}`,
+          variant: "destructive",
+        })
       }
+    }
+
+    loadCarreras()
+  }, [toast])
+
+  // Actualizar la función loadCarreraData para manejar errores correctamente
+  const loadCarreraData = async (carreraLink: string) => {
+    if (!carreraLink) return
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Usar fetch para cargar los datos de la carrera seleccionada
+      // Actualizar la ruta para acceder a los archivos en /public/data/
+      const response = await fetch(`/data/data_${carreraLink}.json`)
+
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status} ${response.statusText}`)
+      }
+
+      const contentType = response.headers.get("content-type")
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error(`Tipo de contenido inesperado: ${contentType}`)
+      }
+
       const data = await response.json()
+
+      if (!data || !data.cursos || !Array.isArray(data.cursos)) {
+        throw new Error("Formato de datos inválido: no se encontraron cursos")
+      }
+
       const cursos = data.cursos
 
       // Convertir los cursos a tareas
@@ -76,33 +112,61 @@ export default function AppContainer() {
         createdAt: new Date().toISOString(),
       }))
 
+      // Extraer departamentos únicos
+      const uniqueDepartments = Array.from(new Set(tasks.map((task) => task.departamento)))
+        .filter(Boolean)
+        .sort()
+      setDepartments(uniqueDepartments)
+
       setAllTasks(tasks)
       setFilteredTasks(tasks)
+      setLoading(false)
     } catch (error) {
       console.error("Error loading carrera data:", error)
+      setError(error instanceof Error ? error.message : "Error desconocido al cargar los datos")
+      setLoading(false)
+
+      // Mostrar un mensaje de error al usuario
+      toast({
+        title: "Error al cargar datos",
+        description: `No se pudieron cargar los datos de la carrera: ${error instanceof Error ? error.message : error}`,
+        variant: "destructive",
+      })
+
+      // Establecer tareas vacías para evitar errores en la interfaz
+      setAllTasks([])
+      setFilteredTasks([])
     }
   }
 
-  // Cargar los datos de la carrera seleccionada al inicio
+  // Cargar los datos de la carrera seleccionada cuando cambie
   useEffect(() => {
-    loadCarreraData(selectedCarrera.link)
+    if (selectedCarrera) {
+      loadCarreraData(selectedCarrera.link)
+    }
   }, [selectedCarrera])
 
-  // Filter tasks based on search query
+  // Actualizar el efecto de filtrado para incluir el filtro de departamento
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredTasks(allTasks)
-      return
+    let filtered = allTasks
+
+    // Aplicar filtro de búsqueda
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(
+        (task) =>
+          (task.nombre && task.nombre.toLowerCase().includes(query)) ||
+          (task.codigo && task.codigo.toLowerCase().includes(query)),
+      )
     }
 
-    const query = searchQuery.toLowerCase()
-    const filtered = allTasks.filter(
-      (task) =>
-        (task.nombre && task.nombre.toLowerCase().includes(query)) ||
-        (task.sigla && task.sigla.toLowerCase().includes(query)),
-    )
+    // Aplicar filtro de departamento
+    if (departmentFilter) {
+      filtered = filtered.filter((task) => task.departamento === departmentFilter)
+    }
+
     setFilteredTasks(filtered)
-  }, [searchQuery, allTasks])
+  }, [searchQuery, departmentFilter, allTasks])
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen)
@@ -114,6 +178,18 @@ export default function AppContainer() {
     if (JSON.stringify(updatedTasks) !== JSON.stringify(allTasks)) {
       setAllTasks(updatedTasks)
     }
+  }
+
+  // Si no hay carreras cargadas aún, mostrar un indicador de carga
+  if (carreras.length === 0 || !selectedCarrera) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-gray-950">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100 mx-auto mb-4"></div>
+          <p className="text-gray-700 dark:text-gray-300">Cargando carreras...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -148,6 +224,22 @@ export default function AppContainer() {
               }`}
             />
           </div>
+
+          {/* Selector de departamento */}
+          <div className="mt-4">
+            <select
+              className="w-full px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+            >
+              <option value="">Todos los departamentos</option>
+              {departments.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Task cards container */}
@@ -155,28 +247,48 @@ export default function AppContainer() {
           className={`flex-1 p-2 overflow-auto ${isSidebarOpen ? "" : "hidden lg:block"}`}
           style={{ maxHeight: "calc(100vh - 140px)" }}
         >
-          <div className="space-y-2">
-            {filteredTasks.map((task) => (
-              <div
-                key={task.id}
-                className={`cursor-pointer ${selectedTask?.id === task.id ? "ring-2 ring-blue-500" : ""}`}
-                onClick={() => setSelectedTask(task)}
+          {loading ? (
+            <div className="text-center py-4 text-gray-500 dark:text-gray-400">Cargando cursos...</div>
+          ) : error ? (
+            <div className="text-center py-4 text-red-500 dark:text-red-400 flex flex-col items-center">
+              <AlertCircle className="h-6 w-6 mb-2" />
+              <p>Error al cargar los cursos</p>
+              <p className="text-xs mt-1">{error}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => selectedCarrera && loadCarreraData(selectedCarrera.link)}
               >
-                <div className="p-2 bg-white dark:bg-gray-700 rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                  <h3 className="font-medium text-sm text-gray-800 dark:text-gray-200 line-clamp-1">
-                    {task.nombre || task.title}
-                  </h3>
-                  {task.sigla && <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">{task.sigla}</p>}
-                  {task.categoria && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{task.categoria}</p>}
+                Reintentar
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className={`cursor-pointer ${selectedTask?.id === task.id ? "ring-2 ring-blue-500" : ""}`}
+                  onClick={() => setSelectedTask(task)}
+                >
+                  <div className="p-2 bg-white dark:bg-gray-700 rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                    <h3 className="font-medium text-sm text-gray-800 dark:text-gray-200 line-clamp-1">
+                      {task.nombre || task.title}
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">{task.codigo}</p>
+                    {task.departamento && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{task.departamento}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {filteredTasks.length === 0 && (
-              <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-                {searchQuery ? "No se encontraron cursos" : "No hay cursos disponibles"}
-              </div>
-            )}
-          </div>
+              ))}
+              {filteredTasks.length === 0 && !loading && !error && (
+                <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                  {searchQuery ? "No se encontraron cursos" : "No hay cursos disponibles"}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </aside>
 
@@ -204,15 +316,16 @@ export default function AppContainer() {
             <h1 className="text-xl font-bold text-gray-800 dark:text-gray-200">Trayectoria Sansana</h1>
             <select
               className="ml-4 px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-              value={selectedCarrera.link}
+              value={selectedCarrera?.link || ""}
               onChange={(e) => {
-                const carrera = carrerasData.carreras.find((c) => c.link === e.target.value)
+                const carrera = carreras.find((c) => c.link === e.target.value)
                 if (carrera) {
                   setSelectedCarrera(carrera)
                 }
               }}
+              disabled={loading}
             >
-              {carrerasData.carreras.map((carrera) => (
+              {carreras.map((carrera) => (
                 <option key={carrera.link} value={carrera.link}>
                   {carrera.nombre}
                 </option>
@@ -227,12 +340,21 @@ export default function AppContainer() {
 
         {/* Main content area */}
         <main className="flex-1 overflow-auto">
-          <KanbanBoard
-            initialTasks={allTasks}
-            onTaskSelect={setSelectedTask}
-            selectedTask={selectedTask}
-            onTasksChange={handleTasksChange}
-          />
+          {error ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">Error al cargar los datos</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4 text-center max-w-md px-4">{error}</p>
+              <Button onClick={() => selectedCarrera && loadCarreraData(selectedCarrera.link)}>Reintentar</Button>
+            </div>
+          ) : (
+            <KanbanBoard
+              initialTasks={allTasks}
+              onTaskSelect={setSelectedTask}
+              selectedTask={selectedTask}
+              onTasksChange={handleTasksChange}
+            />
+          )}
         </main>
 
         {/* Footer */}

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { X, Calendar, Trash2, Plus, CheckSquare, Square, Edit, Copy } from 'lucide-react'
+import { X, Calendar, Trash2, Plus, CheckSquare, Square, Edit, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -247,22 +247,20 @@ export default function TaskDetailSidebar({
 
           {/* Prerequisites */}
           <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">
-              Prerrequisitos (códigos separados por coma)
-            </label>
-            <Input
-              value={editedTask.prerrequisitos ? editedTask.prerrequisitos.join(", ") : ""}
-              onChange={(e) => {
-                const prereqString = e.target.value;
-                const prereqArray = prereqString
-                  .split(",")
-                  .map((id) => id.trim())
-                  .filter((id) => id);
-                setEditedTask({ ...editedTask, prerrequisitos: prereqArray });
-              }}
-              className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-              placeholder="Ej: MAT-021, FIS-100"
-            />
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Prerrequisitos</label>
+            {editedTask.prerrequisitos && editedTask.prerrequisitos.length > 0 ? (
+              <div className="space-y-2">
+                {editedTask.prerrequisitos.map((prereq, index) => (
+                  <div key={index} className="flex items-center bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
+                    <span className="text-sm dark:text-gray-200">{prereq}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
+                No tiene prerrequisitos
+              </div>
+            )}
           </div>
 
           {/* Agregar después de la sección de "Prerequisites": */}
