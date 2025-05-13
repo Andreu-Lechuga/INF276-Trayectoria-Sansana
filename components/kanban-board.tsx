@@ -40,6 +40,7 @@ export default function KanbanBoard({
   // Usar refs para evitar bucles infinitos
   const isInitialized = useRef(false)
   const processedInitialRules = useRef(false)
+  const processedInitialTasks = useRef(false)
 
   // Use external selected task if provided
   useEffect(() => {
@@ -262,15 +263,19 @@ export default function KanbanBoard({
 
   // Notify parent of task changes when columns change
   useEffect(() => {
+    // No notificar durante la inicialización o si no hay función de callback
     if (!isInitialized.current || !onTasksChange) return
 
+    // No notificar si las columnas están vacías (durante la inicialización)
+    const allCurrentTasks = getAllTasks()
+    if (allCurrentTasks.length === 0 && initialTasks && initialTasks.length > 0) return
+
     try {
-      const allTasks = getAllTasks()
-      onTasksChange(allTasks)
+      onTasksChange(allCurrentTasks)
     } catch (err) {
       console.error("Error notifying task changes:", err)
     }
-  }, [columns, onTasksChange, getAllTasks])
+  }, [columns, onTasksChange, getAllTasks, initialTasks])
 
   // Process automation rules
   useEffect(() => {
@@ -282,6 +287,33 @@ export default function KanbanBoard({
       processedInitialRules.current = true
     }
   }, [rules, processRules])
+
+  // Efecto para manejar las tareas iniciales que vienen de AppContainer
+  useEffect(() => {
+    if (isInitialized.current && initialTasks && initialTasks.length > 0) {
+      // Solo procesar las tareas iniciales una vez
+      if (!processedInitialTasks.current) {
+        // No modificar el estado si ya hay tareas en las columnas
+        const currentTasks = getAllTasks()
+        if (currentTasks.length > 0) return
+
+        // Distribuir las tareas iniciales en la columna "To Do" por defecto
+        const newColumns = [...columns]
+        const toDoColumnIndex = newColumns.findIndex((col) => col.title === "To Do")
+
+        if (toDoColumnIndex !== -1) {
+          newColumns[toDoColumnIndex] = {
+            ...newColumns[toDoColumnIndex],
+            tasks: [...initialTasks],
+          }
+
+          setColumns(newColumns)
+        }
+
+        processedInitialTasks.current = true
+      }
+    }
+  }, [initialTasks, columns, getAllTasks])
 
   const handleDragEnd = (result: DropResult) => {
     try {

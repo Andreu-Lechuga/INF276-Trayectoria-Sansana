@@ -69,7 +69,12 @@ export default function AppContainer() {
 
     try {
       // Usar fetch para cargar los datos de la carrera seleccionada
-      const response = await fetch(`/data/data_${carreraLink}.json`)
+      const response = await fetch(`/data/data_${carreraLink}.json`, {
+        headers: {
+          Accept: "application/json",
+          "Cache-Control": "no-cache",
+        },
+      })
 
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status} ${response.statusText}`)
@@ -77,7 +82,30 @@ export default function AppContainer() {
 
       const contentType = response.headers.get("content-type")
       if (!contentType || !contentType.includes("application/json")) {
-        throw new Error(`Tipo de contenido inesperado: ${contentType}`)
+        console.error(`Tipo de contenido incorrecto: ${contentType}`)
+        console.error(`URL solicitada: /data/data_${carreraLink}.json`)
+
+        // Intentar con una ruta alternativa como fallback
+        try {
+          console.log("Intentando ruta alternativa...")
+          const alternativeResponse = await fetch(`./data/data_${carreraLink}.json`)
+
+          if (!alternativeResponse.ok) {
+            throw new Error(`Error HTTP en ruta alternativa: ${alternativeResponse.status}`)
+          }
+
+          const alternativeContentType = alternativeResponse.headers.get("content-type")
+          if (!alternativeContentType || !alternativeContentType.includes("application/json")) {
+            throw new Error(`Tipo de contenido incorrecto en ruta alternativa: ${alternativeContentType}`)
+          }
+
+          return await alternativeResponse.json()
+        } catch (fallbackError) {
+          console.error("Error en ruta alternativa:", fallbackError)
+          throw new Error(
+            `Tipo de contenido inesperado: ${contentType}. Verifique que los archivos JSON estén en la carpeta correcta.`,
+          )
+        }
       }
 
       const data = await response.json()
@@ -170,8 +198,8 @@ export default function AppContainer() {
 
   // Update tasks when they change in the KanbanBoard
   const handleTasksChange = (updatedTasks: Task[]) => {
-    // Only update if the tasks have actually changed
-    if (JSON.stringify(updatedTasks) !== JSON.stringify(allTasks)) {
+    // Solo actualizar si hay tareas actualizadas y son diferentes de las actuales
+    if (updatedTasks.length > 0 && JSON.stringify(updatedTasks) !== JSON.stringify(allTasks)) {
       setAllTasks(updatedTasks)
     }
   }
@@ -344,7 +372,12 @@ export default function AppContainer() {
               <Button onClick={() => selectedCarrera && loadCarreraData(selectedCarrera.link)}>Reintentar</Button>
             </div>
           ) : (
-            <KanbanBoard onTaskSelect={setSelectedTask} selectedTask={selectedTask} onTasksChange={handleTasksChange} />
+            <KanbanBoard
+              initialTasks={allTasks}
+              onTaskSelect={setSelectedTask}
+              selectedTask={selectedTask}
+              onTasksChange={handleTasksChange}
+            />
           )}
         </main>
 

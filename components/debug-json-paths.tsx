@@ -16,7 +16,17 @@ export default function DebugJsonPaths() {
     setResults([])
     setExpanded(null)
 
-    const paths = ["/data/carreras.json", "/data/data_FIS.json", "/data/data_INF.json", "/data/data_MAT.json"]
+    // Modificar la constante paths para incluir más variaciones de rutas
+    const paths = [
+      "/data/carreras.json",
+      "/data/data_FIS.json",
+      "/data/data_INF.json",
+      "/data/data_MAT.json",
+      "./data/carreras.json",
+      "./data/data_FIS.json",
+      "data/carreras.json",
+      "../public/data/carreras.json",
+    ]
 
     const newResults = []
 

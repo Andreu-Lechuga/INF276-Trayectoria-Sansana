@@ -18,6 +18,20 @@ const nextConfig = {
     });
     return config;
   },
+  // Añadir configuración para servir archivos estáticos
+  async headers() {
+    return [
+      {
+        source: '/data/:path*',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/json',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
