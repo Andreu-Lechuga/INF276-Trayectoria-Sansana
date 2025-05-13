@@ -9,9 +9,6 @@ import { Menu, X, Search, ChevronLeft, ChevronRight, AlertCircle } from "lucide-
 import type { Task } from "@/types/kanban"
 import { useToast } from "@/hooks/use-toast"
 
-// Eliminar la importación directa del archivo JSON
-// import carrerasData from "@/public/data/carreras.json"
-
 export default function AppContainer() {
   const { toast } = useToast()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -72,7 +69,6 @@ export default function AppContainer() {
 
     try {
       // Usar fetch para cargar los datos de la carrera seleccionada
-      // Actualizar la ruta para acceder a los archivos en /public/data/
       const response = await fetch(`/data/data_${carreraLink}.json`)
 
       if (!response.ok) {
@@ -348,12 +344,7 @@ export default function AppContainer() {
               <Button onClick={() => selectedCarrera && loadCarreraData(selectedCarrera.link)}>Reintentar</Button>
             </div>
           ) : (
-            <KanbanBoard
-              initialTasks={allTasks}
-              onTaskSelect={setSelectedTask}
-              selectedTask={selectedTask}
-              onTasksChange={handleTasksChange}
-            />
+            <KanbanBoard onTaskSelect={setSelectedTask} selectedTask={selectedTask} onTasksChange={handleTasksChange} />
           )}
         </main>
 

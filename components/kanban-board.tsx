@@ -38,9 +38,7 @@ export default function KanbanBoard({
   const [error, setError] = useState<string | null>(null)
 
   // Usar refs para evitar bucles infinitos
-  const initialTasksRef = useRef(initialTasks)
   const isInitialized = useRef(false)
-  const prevInitialTasksLength = useRef(initialTasks.length)
   const processedInitialRules = useRef(false)
 
   // Use external selected task if provided
@@ -50,129 +48,69 @@ export default function KanbanBoard({
     }
   }, [externalSelectedTask])
 
-  // Inicializar las columnas con las tareas iniciales
+  // Inicializar solo las columnas vacías, sin tareas iniciales
   useEffect(() => {
-    // Solo inicializar una vez o cuando cambie significativamente initialTasks
-    if (
-      !isInitialized.current ||
-      (initialTasks.length > 0 && prevInitialTasksLength.current === 0) ||
-      (initialTasks.length === 0 && prevInitialTasksLength.current > 0)
-    ) {
+    if (!isInitialized.current) {
       try {
-        // Actualizar la referencia para la próxima comparación
-        prevInitialTasksLength.current = initialTasks.length
+        // Crear columnas vacías
+        const initialColumns: ColumnType[] = [
+          {
+            id: "column-1",
+            title: "To Do",
+            tasks: [],
+            color: "bg-blue-50 dark:bg-blue-900/30",
+          },
+          {
+            id: "column-2",
+            title: "In Progress",
+            tasks: [],
+            color: "bg-yellow-50 dark:bg-yellow-900/30",
+          },
+          {
+            id: "column-3",
+            title: "Blocked",
+            tasks: [],
+            color: "bg-red-50 dark:bg-red-900/30",
+          },
+          {
+            id: "column-4",
+            title: "Completed",
+            tasks: [],
+            color: "bg-green-50 dark:bg-green-900/30",
+          },
+        ]
 
-        // Si ya tenemos tareas iniciales, usarlas
-        if (initialTasks.length > 0) {
-          // Distribuir las tareas según el semestre en lugar de por status
-          const tasksByStatus: { [key: string]: Task[] } = {
-            "To Do": [],
-            "In Progress": [],
-            Blocked: [],
-            Completed: [],
-          }
+        setColumns(initialColumns)
 
-          initialTasks.forEach((task) => {
-            if (task.semestre <= 2) {
-              tasksByStatus["To Do"].push({ ...task, status: "To Do" })
-            } else if (task.semestre <= 6) {
-              tasksByStatus["In Progress"].push({ ...task, status: "In Progress" })
-            } else if (task.semestre <= 9) {
-              tasksByStatus["Blocked"].push({ ...task, status: "Blocked" })
-            } else {
-              tasksByStatus["Completed"].push({ ...task, status: "Completed" })
-            }
-          })
-
-          const initialColumns: ColumnType[] = [
-            {
-              id: "column-1",
-              title: "To Do",
-              tasks: tasksByStatus["To Do"] || [],
-              color: "bg-blue-50 dark:bg-blue-900/30",
+        // Add sample automation rules
+        setRules([
+          {
+            id: `rule-${generateId()}`,
+            name: "Move overdue tasks to Blocked",
+            condition: {
+              type: "due-date",
+              operator: "is-overdue",
             },
-            {
-              id: "column-2",
-              title: "In Progress",
-              tasks: tasksByStatus["In Progress"] || [],
-              color: "bg-yellow-50 dark:bg-yellow-900/30",
+            action: {
+              type: "move-to-column",
+              targetColumnId: "column-3", // Blocked column
             },
-            {
-              id: "column-3",
-              title: "Blocked",
-              tasks: tasksByStatus["Blocked"] || [],
-              color: "bg-red-50 dark:bg-red-900/30",
+            enabled: true,
+          },
+          {
+            id: `rule-${generateId()}`,
+            name: "Move completed tasks when all subtasks done",
+            condition: {
+              type: "subtasks-completed",
+              operator: "all-completed",
             },
-            {
-              id: "column-4",
-              title: "Completed",
-              tasks: tasksByStatus["Completed"] || [],
-              color: "bg-green-50 dark:bg-green-900/30",
+            action: {
+              type: "move-to-column",
+              targetColumnId: "column-4", // Completed column
             },
-          ]
-
-          setColumns(initialColumns)
-        } else {
-          // Si no hay tareas iniciales, crear columnas vacías
-          const initialColumns: ColumnType[] = [
-            {
-              id: "column-1",
-              title: "To Do",
-              tasks: [],
-              color: "bg-blue-50 dark:bg-blue-900/30",
-            },
-            {
-              id: "column-2",
-              title: "In Progress",
-              tasks: [],
-              color: "bg-yellow-50 dark:bg-yellow-900/30",
-            },
-            {
-              id: "column-3",
-              title: "Blocked",
-              tasks: [],
-              color: "bg-red-50 dark:bg-red-900/30",
-            },
-            {
-              id: "column-4",
-              title: "Completed",
-              tasks: [],
-              color: "bg-green-50 dark:bg-green-900/30",
-            },
-          ]
-
-          setColumns(initialColumns)
-
-          // Add sample automation rules
-          setRules([
-            {
-              id: `rule-${generateId()}`,
-              name: "Move overdue tasks to Blocked",
-              condition: {
-                type: "due-date",
-                operator: "is-overdue",
-              },
-              action: {
-                type: "move-to-column",
-                targetColumnId: "column-3", // Blocked column
-              },
-              enabled: true,
-            },
-            {
-              id: `rule-${generateId()}`,
-              name: "Move completed tasks when all subtasks done",
-              condition: {
-                type: "subtasks-completed",
-                operator: "all-completed",
-              },
-              action: {
-                type: "move-to-column",
-                targetColumnId: "column-4", // Completed column
-              },
-              enabled: true,
-            },
-          ])
-        }
+            enabled: true,
+          },
+        ])
 
         isInitialized.current = true
         setError(null)
@@ -212,7 +150,7 @@ export default function KanbanBoard({
         isInitialized.current = true
       }
     }
-  }, [initialTasks])
+  }, [])
 
   // Memoizar la función getAllTasks para evitar recrearla en cada renderizado
   const getAllTasks = useCallback(() => {
