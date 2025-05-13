@@ -41,6 +41,7 @@ export default function KanbanBoard({
   const initialTasksRef = useRef(initialTasks)
   const isInitialized = useRef(false)
   const prevInitialTasksLength = useRef(initialTasks.length)
+  const processedInitialRules = useRef(false)
 
   // Use external selected task if provided
   useEffect(() => {
@@ -218,26 +219,12 @@ export default function KanbanBoard({
     return columns.flatMap((column) => column.tasks.map((task) => ({ ...task })))
   }, [columns])
 
-  // Notify parent of task changes when columns change
-  useEffect(() => {
-    if (!isInitialized.current || !onTasksChange) return
-
-    try {
-      const allTasks = getAllTasks()
-      onTasksChange(allTasks)
-    } catch (err) {
-      console.error("Error notifying task changes:", err)
-    }
-  }, [columns, onTasksChange, getAllTasks])
-
-  // Process automation rules
-  useEffect(() => {
-    if (rules.length === 0 || !isInitialized.current) return
-
+  // Memoizar la función para procesar reglas
+  const processRules = useCallback(() => {
     try {
       // Only process enabled rules
       const enabledRules = rules.filter((rule) => rule.enabled)
-      if (enabledRules.length === 0) return
+      if (enabledRules.length === 0) return false
 
       const tasksToMove: { taskId: string; sourceColumnId: string; targetColumnId: string }[] = []
 
@@ -325,11 +312,38 @@ export default function KanbanBoard({
         })
 
         setColumns(newColumns)
+        return true
       }
+
+      return false
     } catch (err) {
       console.error("Error processing automation rules:", err)
+      return false
     }
   }, [columns, rules, selectedTask, toast, onTaskSelect])
+
+  // Notify parent of task changes when columns change
+  useEffect(() => {
+    if (!isInitialized.current || !onTasksChange) return
+
+    try {
+      const allTasks = getAllTasks()
+      onTasksChange(allTasks)
+    } catch (err) {
+      console.error("Error notifying task changes:", err)
+    }
+  }, [columns, onTasksChange, getAllTasks])
+
+  // Process automation rules
+  useEffect(() => {
+    if (rules.length === 0 || !isInitialized.current) return
+
+    // Solo procesar las reglas una vez durante la inicialización
+    if (!processedInitialRules.current) {
+      processRules()
+      processedInitialRules.current = true
+    }
+  }, [rules, processRules])
 
   const handleDragEnd = (result: DropResult) => {
     try {
@@ -382,6 +396,9 @@ export default function KanbanBoard({
         }
       }
 
+      // Procesar reglas después de mover una tarea
+      setTimeout(() => processRules(), 0)
+
       toast({
         title: "Task moved",
         description: `"${task.title}" moved to ${destColumn.title}`,
@@ -408,6 +425,9 @@ export default function KanbanBoard({
         return column
       })
       setColumns(newColumns)
+
+      // Procesar reglas después de añadir una tarea
+      setTimeout(() => processRules(), 0)
 
       toast({
         title: "Task created",
@@ -436,6 +456,9 @@ export default function KanbanBoard({
       if (onTaskSelect) {
         onTaskSelect(updatedTask)
       }
+
+      // Procesar reglas después de actualizar una tarea
+      setTimeout(() => processRules(), 0)
 
       toast({
         title: "Task updated",
