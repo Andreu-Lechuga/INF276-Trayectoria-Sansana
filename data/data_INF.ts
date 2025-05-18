@@ -1,6 +1,7 @@
 // Datos de cursos de Ingeniería Civil Informática
 export const cursos = [
   {
+    id: 1,
     nombre: "Programación",
     codigo: "IWI-131",
     creditos: 3,
@@ -11,6 +12,7 @@ export const cursos = [
     semestre: 1,
   },
   {
+    id: 2,
     nombre: "Matemáticas I",
     codigo: "MAT-021",
     creditos: 5,
@@ -21,6 +23,7 @@ export const cursos = [
     semestre: 1,
   },
   {
+    id: 3,
     nombre: "Introducción a la Física",
     codigo: "FIS-100",
     creditos: 3,
@@ -31,6 +34,7 @@ export const cursos = [
     semestre: 1,
   },
   {
+    id: 4,
     nombre: "Humanístico I",
     codigo: "HRW-132",
     creditos: 2,
@@ -41,6 +45,7 @@ export const cursos = [
     semestre: 1,
   },
   {
+    id: 5,
     nombre: "Educación Física I",
     codigo: "DEW-100",
     creditos: 1,
@@ -51,6 +56,7 @@ export const cursos = [
     semestre: 1,
   },
   {
+    id: 6,
     nombre: "Química y Sociedad",
     codigo: "QUI-010",
     creditos: 3,
@@ -61,26 +67,29 @@ export const cursos = [
     semestre: 2,
   },
   {
+    id: 7,
     nombre: "Matemáticas II",
     codigo: "MAT-022",
     creditos: 5,
     horas: 7,
     departamento: "PC",
-    prerrequisitos: ["MAT-021"],
+    prerrequisitos: [2], // MAT-021
     periodo: "A",
     semestre: 2,
   },
   {
+    id: 8,
     nombre: "Física General I",
     codigo: "FIS-110",
     creditos: 5,
     horas: 8,
     departamento: "PC",
-    prerrequisitos: ["MAT-021", "FIS-100"],
+    prerrequisitos: [2, 3], // MAT-021, FIS-100
     periodo: "A",
     semestre: 2,
   },
   {
+    id: 9,
     nombre: "Introducción a la Ingeniería",
     codigo: "IWG-101",
     creditos: 2,
@@ -91,6 +100,7 @@ export const cursos = [
     semestre: 2,
   },
   {
+    id: 10,
     nombre: "Humanístico II",
     codigo: "HRW-133",
     creditos: 2,
@@ -101,12 +111,13 @@ export const cursos = [
     semestre: 2,
   },
   {
+    id: 11,
     nombre: "Educación Física II",
     codigo: "DEW-101",
     creditos: 1,
     horas: 2,
     departamento: "HUM",
-    prerrequisitos: ["DEW-100"],
+    prerrequisitos: [5], // DEW-100
     periodo: "A",
     semestre: 2,
   },

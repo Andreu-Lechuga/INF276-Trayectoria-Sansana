@@ -13,9 +13,10 @@ export interface Task {
   creditos: number
   horas: number
   departamento: string
-  prerrequisitos: string[]
+  prerrequisitos: number[] // Cambiado de string[] a number[]
   periodo: string
   semestre: number
+  cursoId?: number // Nuevo campo para el ID numérico del curso
 }
 
 export interface Subtask {

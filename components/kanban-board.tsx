@@ -12,12 +12,14 @@ import { useToast } from "@/hooks/use-toast"
 import type { Task, Column as ColumnType, Rule } from "@/types/kanban"
 import { generateId } from "@/lib/utils"
 import YearGroup from "./year-group"
+import DebugBoard from "./debug-board"
 
 interface KanbanBoardProps {
   initialTasks?: Task[]
   onTaskSelect?: (task: Task | null) => void
   selectedTask?: Task | null
   onTasksChange?: (tasks: Task[]) => void
+  toggleSidebar?: () => void // Nueva prop para activar el sidebar
 }
 
 export default function KanbanBoard({
@@ -25,6 +27,7 @@ export default function KanbanBoard({
   onTaskSelect,
   selectedTask: externalSelectedTask,
   onTasksChange,
+  toggleSidebar,
 }: KanbanBoardProps) {
   const { toast } = useToast()
   const [columns, setColumns] = useState<ColumnType[]>([])
@@ -34,6 +37,7 @@ export default function KanbanBoard({
   const [rules, setRules] = useState<Rule[]>([])
   const [activeTab, setActiveTab] = useState("board")
   const [error, setError] = useState<string | null>(null)
+  const [debug, setDebug] = useState(true)
 
   // Usar refs para evitar bucles infinitos
   const isInitialized = useRef(false)
@@ -51,43 +55,13 @@ export default function KanbanBoard({
   useEffect(() => {
     if (!isInitialized.current) {
       try {
-        // Crear columnas vacías
+        // Crear solo la columna del primer semestre
         const initialColumns: ColumnType[] = [
           {
             id: "column-1",
             title: "I",
             tasks: [],
             color: "bg-blue-50 dark:bg-blue-900/30",
-          },
-          {
-            id: "column-2",
-            title: "II",
-            tasks: [],
-            color: "bg-blue-50 dark:bg-blue-900/30",
-          },
-          {
-            id: "column-3",
-            title: "III",
-            tasks: [],
-            color: "bg-green-50 dark:bg-green-900/30",
-          },
-          {
-            id: "column-4",
-            title: "IV",
-            tasks: [],
-            color: "bg-green-50 dark:bg-green-900/30",
-          },
-          {
-            id: "column-5",
-            title: "V",
-            tasks: [],
-            color: "bg-yellow-50 dark:bg-yellow-900/30",
-          },
-          {
-            id: "column-6",
-            title: "VI",
-            tasks: [],
-            color: "bg-yellow-50 dark:bg-yellow-900/30",
           },
         ]
 
@@ -133,13 +107,7 @@ export default function KanbanBoard({
         const initialColumns: ColumnType[] = [
           {
             id: "column-1",
-            title: "2025-1",
-            tasks: [],
-            color: "bg-blue-50 dark:bg-blue-900/30",
-          },
-          {
-            id: "column-2",
-            title: "2025-2",
+            title: "I",
             tasks: [],
             color: "bg-blue-50 dark:bg-blue-900/30",
           },
@@ -291,27 +259,33 @@ export default function KanbanBoard({
     if (isInitialized.current && initialTasks && initialTasks.length > 0) {
       // Solo procesar las tareas iniciales una vez
       if (!processedInitialTasks.current) {
-        // No modificar el estado si ya hay tareas en las columnas
-        const currentTasks = getAllTasks()
-        if (currentTasks.length > 0) return
+        try {
+          // Filtrar las tareas del primer semestre
+          const primerSemestreTasks = initialTasks.filter((task) => task.semestre === 1)
 
-        // Distribuir las tareas iniciales en la columna "To Do" por defecto
-        const newColumns = [...columns]
-        const toDoColumnIndex = newColumns.findIndex((col) => col.title === "To Do")
+          if (primerSemestreTasks.length > 0 && columns.length > 0) {
+            // Asignar las tareas del primer semestre a la primera columna
+            const newColumns = [...columns]
+            const firstColumnIndex = 0 // La primera columna siempre es la del primer semestre
 
-        if (toDoColumnIndex !== -1) {
-          newColumns[toDoColumnIndex] = {
-            ...newColumns[toDoColumnIndex],
-            tasks: [...initialTasks],
+            newColumns[firstColumnIndex] = {
+              ...newColumns[firstColumnIndex],
+              tasks: [...primerSemestreTasks],
+            }
+
+            setColumns(newColumns)
+            console.log("Cursos del primer semestre cargados:", primerSemestreTasks.length)
+          } else {
+            console.log("No hay cursos del primer semestre o no hay columnas inicializadas")
           }
 
-          setColumns(newColumns)
+          processedInitialTasks.current = true
+        } catch (err) {
+          console.error("Error al procesar tareas iniciales:", err)
         }
-
-        processedInitialTasks.current = true
       }
     }
-  }, [initialTasks, columns, getAllTasks])
+  }, [initialTasks, columns])
 
   const handleDragEnd = (result: DropResult) => {
     try {
@@ -634,7 +608,7 @@ export default function KanbanBoard({
         {/* Agrupar columnas por año */}
         {(() => {
           // Organizar columnas por años (2 columnas por año)
-          const yearGroups: { year: number; columns: ColumnType[] } = []
+          const yearGroups: { year: number; columns: ColumnType[] }[] = []
 
           for (let i = 0; i < columns.length; i += 2) {
             const yearColumns = columns.slice(i, i + 2)
@@ -653,6 +627,7 @@ export default function KanbanBoard({
                   onDeleteColumn={() => deleteColumn(column.id)}
                   onUpdateColumn={updateColumn}
                   onDuplicateTask={duplicateTask}
+                  toggleSidebar={toggleSidebar || (() => {})}
                 />
               ))}
             </YearGroup>
@@ -734,6 +709,8 @@ export default function KanbanBoard({
           columns={columns}
         />
       )}
+
+      {debug && <DebugBoard initialTasks={initialTasks} columns={columns} />}
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Droppable, Draggable } from "@hello-pangea/dnd"
-import { MoreHorizontal, Plus, Trash2, Palette } from "lucide-react"
+import { MoreHorizontal, Trash2, Edit, Palette } from "lucide-react"
 import TaskCard from "./task-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,6 +31,7 @@ interface ColumnProps {
   onDeleteColumn: () => void
   onUpdateColumn: (columnId: string, updates: Partial<ColumnType>) => void
   onDuplicateTask: (task: Task, columnId: string) => void
+  toggleSidebar: () => void // Nueva prop para activar el sidebar
 }
 
 export default function Column({
@@ -40,6 +41,7 @@ export default function Column({
   onDeleteColumn,
   onUpdateColumn,
   onDuplicateTask,
+  toggleSidebar,
 }: ColumnProps) {
   const [isAddingTask, setIsAddingTask] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState("")
@@ -82,7 +84,7 @@ export default function Column({
   const headerColorClass = column.color || "bg-white dark:bg-gray-800"
 
   return (
-    <div className="shrink-0 w-64 flex flex-col bg-gray-50 dark:bg-gray-900 rounded-md shadow-sm">
+    <div className="shrink-0 w-52 flex flex-col bg-gray-50 dark:bg-gray-900 rounded-md shadow-sm">
       <div className={`p-3 flex items-center border-b rounded-t-md ${headerColorClass}`}>
         {/* Contador de ramos al extremo izquierdo */}
         <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
@@ -199,9 +201,9 @@ export default function Column({
               <Button
                 variant="ghost"
                 className="w-full mt-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 justify-start"
-                onClick={() => setIsAddingTask(true)}
+                onClick={toggleSidebar}
               >
-                <Plus className="mr-2 h-4 w-4" /> Add Task
+                <Edit className="mr-2 h-4 w-4" /> Editar Semestre
               </Button>
             )}
           </div>

@@ -17,6 +17,7 @@ export default function AppContainer() {
   const [searchQuery, setSearchQuery] = useState("")
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
   const [allTasks, setAllTasks] = useState<Task[]>([])
+  const [boardTasks, setBoardTasks] = useState<Task[]>([])
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -65,11 +66,12 @@ export default function AppContainer() {
         periodo: curso.periodo || "",
         semestre: curso.semestre,
         description: "",
-        status: "To Do", // Estado por defecto
+        status: "To Do", // Inicialmente todos como "To Do"
         dueDate: null,
         subtasks: [],
         customFields: [],
         createdAt: new Date().toISOString(),
+        cursoId: curso.id, // Añadir el ID numérico del curso
       }))
 
       // Extraer departamentos únicos
@@ -78,8 +80,21 @@ export default function AppContainer() {
         .sort()
       setDepartments(uniqueDepartments)
 
+      // Separar los cursos del primer semestre
+      const primerSemestreTasks = tasks.filter((task) => task.semestre === 1)
+
+      // Guardar todos los cursos
       setAllTasks(tasks)
+
+      // Filtrar para el sidebar
       setFilteredTasks(tasks)
+
+      // Actualizar el estado para indicar que tenemos cursos del primer semestre
+      if (primerSemestreTasks.length > 0) {
+        // Enviamos solo los cursos del primer semestre al tablero
+        setBoardTasks(primerSemestreTasks)
+      }
+
       setLoading(false)
     } catch (error) {
       console.error("Error loading carrera data:", error)
@@ -96,6 +111,7 @@ export default function AppContainer() {
       // Establecer tareas vacías para evitar errores en la interfaz
       setAllTasks([])
       setFilteredTasks([])
+      setBoardTasks([])
     }
   }
 
@@ -135,8 +151,8 @@ export default function AppContainer() {
   // Update tasks when they change in the KanbanBoard
   const handleTasksChange = (updatedTasks: Task[]) => {
     // Solo actualizar si hay tareas actualizadas y son diferentes de las actuales
-    if (updatedTasks.length > 0 && JSON.stringify(updatedTasks) !== JSON.stringify(allTasks)) {
-      setAllTasks(updatedTasks)
+    if (updatedTasks.length > 0 && JSON.stringify(updatedTasks) !== JSON.stringify(boardTasks)) {
+      setBoardTasks(updatedTasks)
     }
   }
 
@@ -308,10 +324,11 @@ export default function AppContainer() {
             </div>
           ) : (
             <KanbanBoard
-              initialTasks={allTasks}
+              initialTasks={boardTasks}
               onTaskSelect={setSelectedTask}
               selectedTask={selectedTask}
               onTasksChange={handleTasksChange}
+              toggleSidebar={() => setIsSidebarOpen(true)}
             />
           )}
         </main>
