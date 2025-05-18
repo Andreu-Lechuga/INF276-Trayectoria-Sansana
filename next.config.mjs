@@ -10,15 +10,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Asegurarse de que Next.js sirva correctamente los archivos JSON
-  webpack: (config) => {
-    config.module.rules.push({
-      test: /\.json$/,
-      type: 'json',
-    });
-    return config;
-  },
-  // Añadir configuración para servir archivos estáticos
+  // Configuración para servir archivos estáticos
   async headers() {
     return [
       {
@@ -31,6 +23,17 @@ const nextConfig = {
         ],
       },
     ];
+  },
+  // Asegurarse de que los archivos JSON se sirvan correctamente
+  webpack: (config) => {
+    config.module.rules.push({
+      test: /\.json$/,
+      type: 'javascript/auto',
+      resolve: {
+        fullySpecified: false
+      }
+    });
+    return config;
   },
 };
 

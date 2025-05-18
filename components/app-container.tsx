@@ -27,16 +27,41 @@ export default function AppContainer() {
   const [departmentFilter, setDepartmentFilter] = useState<string>("")
   const [departments, setDepartments] = useState<string[]>([])
 
+  // También modificar la función loadCarreras para usar el mismo enfoque seguro
+  // Buscar la función o el useEffect que carga las carreras y reemplazarlo con:
+
   // Cargar las carreras al inicio
   useEffect(() => {
     const loadCarreras = async () => {
       try {
-        const response = await fetch("/data/carreras.json")
+        const response = await fetch("/data/carreras.json", {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache",
+          },
+        })
+
         if (!response.ok) {
           throw new Error(`Error HTTP: ${response.status} ${response.statusText}`)
         }
 
-        const data = await response.json()
+        // Convertir la respuesta a texto primero para depuración
+        const text = await response.text()
+
+        // Intentar parsear el texto como JSON
+        let data
+        try {
+          data = JSON.parse(text)
+        } catch (parseError) {
+          console.error("Error parsing JSON:", parseError)
+          console.error("Response text:", text)
+          throw new Error(
+            `Error al parsear JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+          )
+        }
+
         if (!data || !data.carreras || !Array.isArray(data.carreras)) {
           throw new Error("Formato de datos inválido: no se encontraron carreras")
         }
@@ -60,7 +85,9 @@ export default function AppContainer() {
     loadCarreras()
   }, [toast])
 
-  // Actualizar la función loadCarreraData para manejar errores correctamente
+  // Modificar la función loadCarreraData para manejar mejor las respuestas de fetch
+  // Buscar la función loadCarreraData y reemplazarla con esta versión mejorada:
+
   const loadCarreraData = async (carreraLink: string) => {
     if (!carreraLink) return
 
@@ -68,47 +95,35 @@ export default function AppContainer() {
     setError(null)
 
     try {
-      // Usar fetch para cargar los datos de la carrera seleccionada
+      // Usar una ruta relativa más simple y directa
       const response = await fetch(`/data/data_${carreraLink}.json`, {
+        method: "GET",
         headers: {
           Accept: "application/json",
+          "Content-Type": "application/json",
           "Cache-Control": "no-cache",
         },
       })
 
+      // Verificar si la respuesta es exitosa
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status} ${response.statusText}`)
       }
 
-      const contentType = response.headers.get("content-type")
-      if (!contentType || !contentType.includes("application/json")) {
-        console.error(`Tipo de contenido incorrecto: ${contentType}`)
-        console.error(`URL solicitada: /data/data_${carreraLink}.json`)
+      // Convertir la respuesta a texto primero para depuración
+      const text = await response.text()
 
-        // Intentar con una ruta alternativa como fallback
-        try {
-          console.log("Intentando ruta alternativa...")
-          const alternativeResponse = await fetch(`./data/data_${carreraLink}.json`)
-
-          if (!alternativeResponse.ok) {
-            throw new Error(`Error HTTP en ruta alternativa: ${alternativeResponse.status}`)
-          }
-
-          const alternativeContentType = alternativeResponse.headers.get("content-type")
-          if (!alternativeContentType || !alternativeContentType.includes("application/json")) {
-            throw new Error(`Tipo de contenido incorrecto en ruta alternativa: ${alternativeContentType}`)
-          }
-
-          return await alternativeResponse.json()
-        } catch (fallbackError) {
-          console.error("Error en ruta alternativa:", fallbackError)
-          throw new Error(
-            `Tipo de contenido inesperado: ${contentType}. Verifique que los archivos JSON estén en la carpeta correcta.`,
-          )
-        }
+      // Intentar parsear el texto como JSON
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch (parseError) {
+        console.error("Error parsing JSON:", parseError)
+        console.error("Response text:", text)
+        throw new Error(
+          `Error al parsear JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+        )
       }
-
-      const data = await response.json()
 
       if (!data || !data.cursos || !Array.isArray(data.cursos)) {
         throw new Error("Formato de datos inválido: no se encontraron cursos")
