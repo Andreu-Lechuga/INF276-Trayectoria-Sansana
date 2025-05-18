@@ -2,13 +2,12 @@
 
 import { useState } from "react"
 import { Droppable, Draggable } from "@hello-pangea/dnd"
-import { MoreHorizontal, Plus, Trash2, Palette } from 'lucide-react'
+import { MoreHorizontal, Plus, Trash2, Palette } from "lucide-react"
 import TaskCard from "./task-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { Task, Column as ColumnType } from "@/types/kanban"
 import { generateId } from "@/lib/utils"
@@ -48,7 +47,7 @@ export default function Column({
 
   // Actualizar la función handleAddTask para crear tareas con la estructura correcta
   const handleAddTask = () => {
-    if (!newTaskTitle.trim()) return;
+    if (!newTaskTitle.trim()) return
 
     const newTask: Task = {
       id: `task-${generateId()}`,
@@ -67,13 +66,13 @@ export default function Column({
       subtasks: [],
       customFields: [],
       createdAt: new Date().toISOString(),
-    };
+    }
 
-    onAddTask(column.id, newTask);
-    setNewTaskTitle("");
-    setNewTaskDescription("");
-    setIsAddingTask(false);
-  };
+    onAddTask(column.id, newTask)
+    setNewTaskTitle("")
+    setNewTaskDescription("")
+    setIsAddingTask(false)
+  }
 
   const handleColorChange = (color: string) => {
     onUpdateColumn(column.id, { color })
@@ -83,51 +82,60 @@ export default function Column({
   const headerColorClass = column.color || "bg-white dark:bg-gray-800"
 
   return (
-    <div className="shrink-0 w-72 flex flex-col bg-gray-50 dark:bg-gray-900 rounded-md shadow-sm">
-      <div className={`p-3 flex justify-between items-center border-b rounded-t-md ${headerColorClass}`}>
-        <h3 className="font-medium text-sm text-gray-700 dark:text-gray-200 flex items-center">
-          {column.title}
-          <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
-            {column.tasks.length}
-          </span>
-        </h3>
-        <div className="flex">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Palette className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 dark:bg-gray-800 dark:border-gray-700">
-              <div className="space-y-2">
-                <h4 className="font-medium text-sm dark:text-gray-200">Column Color</h4>
-                <div className="grid grid-cols-4 gap-2">
-                  {COLUMN_COLORS.map((color) => (
-                    <button
-                      key={color.value}
-                      className={`h-8 w-full rounded-md ${color.value} border dark:border-gray-700 hover:opacity-80 transition-opacity`}
-                      onClick={() => handleColorChange(color.value)}
-                      aria-label={`Set column color to ${color.name}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onDeleteColumn} className="text-red-600 dark:text-red-400">
+    <div className="shrink-0 w-52 flex flex-col bg-gray-50 dark:bg-gray-900 rounded-md shadow-sm">
+      <div className={`p-3 flex items-center border-b rounded-t-md ${headerColorClass}`}>
+        {/* Contador de ramos al extremo izquierdo */}
+        <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
+          {column.tasks.length}
+        </span>
+
+        {/* Título centrado - usando flex-1 y text-center en lugar de posicionamiento absoluto */}
+        <h3 className="flex-1 font-medium text-sm text-gray-700 dark:text-gray-200 text-center mx-2">{column.title}</h3>
+
+        {/* Menú de opciones al extremo derecho */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 ml-auto">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-48 p-2">
+            <div className="space-y-1">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-full justify-start text-left">
+                    <Palette className="mr-2 h-4 w-4" />
+                    Cambiar Color
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 dark:bg-gray-800 dark:border-gray-700">
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm dark:text-gray-200">Column Color</h4>
+                    <div className="grid grid-cols-4 gap-2">
+                      {COLUMN_COLORS.map((color) => (
+                        <button
+                          key={color.value}
+                          className={`h-8 w-full rounded-md ${color.value} border dark:border-gray-700 hover:opacity-80 transition-opacity`}
+                          onClick={() => handleColorChange(color.value)}
+                          aria-label={`Set column color to ${color.name}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-left text-red-600 dark:text-red-400"
+                onClick={onDeleteColumn}
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Column
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <Droppable droppableId={column.id}>

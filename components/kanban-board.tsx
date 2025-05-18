@@ -57,27 +57,15 @@ export default function KanbanBoard({
         const initialColumns: ColumnType[] = [
           {
             id: "column-1",
-            title: "To Do",
+            title: "2025-1",
             tasks: [],
             color: "bg-blue-50 dark:bg-blue-900/30",
           },
           {
             id: "column-2",
-            title: "In Progress",
+            title: "2025-2",
             tasks: [],
-            color: "bg-yellow-50 dark:bg-yellow-900/30",
-          },
-          {
-            id: "column-3",
-            title: "Blocked",
-            tasks: [],
-            color: "bg-red-50 dark:bg-red-900/30",
-          },
-          {
-            id: "column-4",
-            title: "Completed",
-            tasks: [],
-            color: "bg-green-50 dark:bg-green-900/30",
+            color: "bg-blue-50 dark:bg-blue-900/30",
           },
         ]
 
@@ -87,27 +75,27 @@ export default function KanbanBoard({
         setRules([
           {
             id: `rule-${generateId()}`,
-            name: "Move overdue tasks to Blocked",
+            name: "Move overdue tasks to 2025-2",
             condition: {
               type: "due-date",
               operator: "is-overdue",
             },
             action: {
               type: "move-to-column",
-              targetColumnId: "column-3", // Blocked column
+              targetColumnId: "column-2", // 2025-2 column
             },
             enabled: true,
           },
           {
             id: `rule-${generateId()}`,
-            name: "Move completed tasks when all subtasks done",
+            name: "Move completed tasks to 2025-2",
             condition: {
               type: "subtasks-completed",
               operator: "all-completed",
             },
             action: {
               type: "move-to-column",
-              targetColumnId: "column-4", // Completed column
+              targetColumnId: "column-2", // 2025-2 column
             },
             enabled: true,
           },
@@ -123,27 +111,15 @@ export default function KanbanBoard({
         const initialColumns: ColumnType[] = [
           {
             id: "column-1",
-            title: "To Do",
+            title: "2025-1",
             tasks: [],
             color: "bg-blue-50 dark:bg-blue-900/30",
           },
           {
             id: "column-2",
-            title: "In Progress",
+            title: "2025-2",
             tasks: [],
-            color: "bg-yellow-50 dark:bg-yellow-900/30",
-          },
-          {
-            id: "column-3",
-            title: "Blocked",
-            tasks: [],
-            color: "bg-red-50 dark:bg-red-900/30",
-          },
-          {
-            id: "column-4",
-            title: "Completed",
-            tasks: [],
-            color: "bg-green-50 dark:bg-green-900/30",
+            color: "bg-blue-50 dark:bg-blue-900/30",
           },
         ]
 
@@ -651,7 +627,7 @@ export default function KanbanBoard({
           />
         ))}
 
-        <div className="shrink-0 w-72">
+        <div className="shrink-0 w-52">
           {isAddingColumn ? (
             <div className="bg-white dark:bg-gray-800 p-3 rounded-md shadow-sm border dark:border-gray-700">
               <Label htmlFor="column-title" className="dark:text-gray-200">

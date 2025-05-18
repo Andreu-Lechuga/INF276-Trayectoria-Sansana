@@ -288,6 +288,8 @@ export default function AppContainer() {
               </Button>
             </div>
           ) : (
+            // Luego, reemplazar el div que muestra las tarjetas en el sidebar con el componente TaskCard
+            // Buscar y reemplazar este bloque:
             <div className="space-y-2">
               {filteredTasks.map((task) => (
                 <div
