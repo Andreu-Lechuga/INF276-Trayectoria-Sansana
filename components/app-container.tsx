@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ThemeToggle } from "./theme-toggle"
 import KanbanBoard from "./kanban-board"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -160,8 +159,8 @@ export default function AppContainer() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:relative inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 transform transition-all duration-200 ease-in-out ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:w-0 lg:opacity-0 lg:overflow-hidden"
+        className={`fixed lg:relative inset-y-0 right-0 z-50 w-64 bg-white dark:bg-gray-800 border-l dark:border-gray-700 transform transition-all duration-200 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "translate-x-full lg:w-0 lg:opacity-0 lg:overflow-hidden"
         }`}
       >
         <div className="flex items-center justify-between h-16 px-4 border-b dark:border-gray-700">
@@ -256,14 +255,14 @@ export default function AppContainer() {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Toggle button outside sidebar */}
-        <div className="absolute top-3 left-0 z-50 lg:block hidden">
+        <div className="absolute top-3 right-0 z-50 lg:block hidden">
           <Button
             variant="outline"
             size="icon"
             onClick={toggleSidebar}
-            className="rounded-full shadow-md bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 ml-2"
+            className="rounded-full shadow-md bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 mr-2"
           >
-            {isSidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            {isSidebarOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
         </div>
 
@@ -294,9 +293,7 @@ export default function AppContainer() {
             </select>
           </div>
 
-          <div className="flex items-center ml-auto">
-            <ThemeToggle />
-          </div>
+          <div className="flex items-center">{/* Espacio para futuros controles */}</div>
         </header>
 
         {/* Main content area */}

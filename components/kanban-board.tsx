@@ -7,13 +7,11 @@ import Column from "./column"
 import TaskDetailSidebar from "./task-detail-sidebar"
 import AutomationRules from "./automation-rules"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import type { Task, Column as ColumnType, Rule } from "@/types/kanban"
 import { generateId } from "@/lib/utils"
-import { ThemeToggle } from "@/components/theme-toggle"
+import YearGroup from "./year-group"
 
 interface KanbanBoardProps {
   initialTasks?: Task[]
@@ -57,15 +55,39 @@ export default function KanbanBoard({
         const initialColumns: ColumnType[] = [
           {
             id: "column-1",
-            title: "2025-1",
+            title: "I",
             tasks: [],
             color: "bg-blue-50 dark:bg-blue-900/30",
           },
           {
             id: "column-2",
-            title: "2025-2",
+            title: "II",
             tasks: [],
             color: "bg-blue-50 dark:bg-blue-900/30",
+          },
+          {
+            id: "column-3",
+            title: "III",
+            tasks: [],
+            color: "bg-green-50 dark:bg-green-900/30",
+          },
+          {
+            id: "column-4",
+            title: "IV",
+            tasks: [],
+            color: "bg-green-50 dark:bg-green-900/30",
+          },
+          {
+            id: "column-5",
+            title: "V",
+            tasks: [],
+            color: "bg-yellow-50 dark:bg-yellow-900/30",
+          },
+          {
+            id: "column-6",
+            title: "VI",
+            tasks: [],
+            color: "bg-yellow-50 dark:bg-yellow-900/30",
           },
         ]
 
@@ -481,33 +503,27 @@ export default function KanbanBoard({
 
   const addColumn = () => {
     try {
-      if (!newColumnTitle.trim()) {
-        toast({
-          title: "Error",
-          description: "Column title cannot be empty",
-          variant: "destructive",
-        })
-        return
-      }
+      // Determinar el número romano para la nueva columna
+      const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
+      const nextIndex = columns.length
+      const nextRomanNumeral = romanNumerals[nextIndex] || `${nextIndex + 1}`
 
       const newColumn: ColumnType = {
         id: `column-${generateId()}`,
-        title: newColumnTitle,
+        title: nextRomanNumeral,
         tasks: [],
       }
 
       setColumns([...columns, newColumn])
-      setNewColumnTitle("")
-      setIsAddingColumn(false)
       toast({
-        title: "Column added",
-        description: `"${newColumnTitle}" column has been added`,
+        title: "Semestre añadido",
+        description: `Semestre ${nextRomanNumeral} ha sido añadido`,
       })
     } catch (err) {
       console.error("Error adding column:", err)
       toast({
         title: "Error",
-        description: "Ocurrió un error al añadir la columna",
+        description: "Ocurrió un error al añadir el semestre",
         variant: "destructive",
       })
     }
@@ -614,55 +630,43 @@ export default function KanbanBoard({
   // Board content for the "board" tab
   const renderBoardContent = () => (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex gap-4 h-full overflow-x-auto pb-4">
-        {columns.map((column) => (
-          <Column
-            key={column.id}
-            column={column}
-            onAddTask={addTask}
-            onTaskClick={handleTaskClick}
-            onDeleteColumn={() => deleteColumn(column.id)}
-            onUpdateColumn={updateColumn}
-            onDuplicateTask={duplicateTask}
-          />
-        ))}
+      <div className="flex gap-6 h-full overflow-x-auto pb-4">
+        {/* Agrupar columnas por año */}
+        {(() => {
+          // Organizar columnas por años (2 columnas por año)
+          const yearGroups: { year: number; columns: ColumnType[] } = []
+
+          for (let i = 0; i < columns.length; i += 2) {
+            const yearColumns = columns.slice(i, i + 2)
+            const yearNumber = Math.floor(i / 2) + 1
+            yearGroups.push({ year: yearNumber, columns: yearColumns })
+          }
+
+          return yearGroups.map((yearGroup) => (
+            <YearGroup key={`year-${yearGroup.year}`} year={yearGroup.year} columns={yearGroup.columns}>
+              {yearGroup.columns.map((column) => (
+                <Column
+                  key={column.id}
+                  column={column}
+                  onAddTask={addTask}
+                  onTaskClick={handleTaskClick}
+                  onDeleteColumn={() => deleteColumn(column.id)}
+                  onUpdateColumn={updateColumn}
+                  onDuplicateTask={duplicateTask}
+                />
+              ))}
+            </YearGroup>
+          ))
+        })()}
 
         <div className="shrink-0 w-52">
-          {isAddingColumn ? (
-            <div className="bg-white dark:bg-gray-800 p-3 rounded-md shadow-sm border dark:border-gray-700">
-              <Label htmlFor="column-title" className="dark:text-gray-200">
-                Column Title
-              </Label>
-              <Input
-                id="column-title"
-                value={newColumnTitle}
-                onChange={(e) => setNewColumnTitle(e.target.value)}
-                placeholder="Enter column title"
-                className="mb-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-              />
-              <div className="flex gap-2">
-                <Button size="sm" onClick={addColumn}>
-                  Add
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsAddingColumn(false)}
-                  className="dark:border-gray-600 dark:text-gray-200"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <Button
-              variant="outline"
-              className="border-dashed border-2 w-full h-12 dark:border-gray-700 dark:text-gray-300"
-              onClick={() => setIsAddingColumn(true)}
-            >
-              <Plus className="mr-2 h-4 w-4" /> Add Column
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            className="border-dashed border-2 w-full h-12 dark:border-gray-700 dark:text-gray-300"
+            onClick={addColumn}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Añadir Semestre
+          </Button>
         </div>
       </div>
     </DragDropContext>
@@ -697,7 +701,6 @@ export default function KanbanBoard({
       <header className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-4 shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Kanban Board</h1>
-          <ThemeToggle />
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
