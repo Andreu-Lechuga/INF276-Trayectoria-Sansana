@@ -153,21 +153,21 @@ export default function AppContainer() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-gray-950">
+    <div className="flex flex-row-reverse h-screen bg-slate-50 dark:bg-gray-950">
       {/* Sidebar - Mobile overlay */}
       {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={toggleSidebar} />}
 
       {/* Sidebar */}
       <aside
         className={`fixed lg:relative inset-y-0 right-0 z-50 w-64 bg-white dark:bg-gray-800 border-l dark:border-gray-700 transform transition-all duration-200 ease-in-out ${
-          isSidebarOpen ? "translate-x-0" : "translate-x-full lg:w-0 lg:opacity-0 lg:overflow-hidden"
+          isSidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0 lg:overflow-hidden"
         }`}
       >
         <div className="flex items-center justify-between h-16 px-4 border-b dark:border-gray-700">
-          <div className="flex-1"></div>
           <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
             <X className="h-5 w-5" />
           </Button>
+          <div className="flex-1 text-right">Cursos</div>
         </div>
 
         {/* Search bar at the top */}
@@ -270,9 +270,6 @@ export default function AppContainer() {
         <header className="h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex items-center justify-between px-4 lg:px-6">
           {/* Agregar selector de carreras en el header */}
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
-              <Menu className="h-5 w-5" />
-            </Button>
             <h1 className="text-xl font-bold text-gray-800 dark:text-gray-200">Trayectoria Sansana</h1>
             <select
               className="ml-4 px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
@@ -293,7 +290,11 @@ export default function AppContainer() {
             </select>
           </div>
 
-          <div className="flex items-center">{/* Espacio para futuros controles */}</div>
+          <div className="flex items-center">
+            <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </div>
         </header>
 
         {/* Main content area */}
