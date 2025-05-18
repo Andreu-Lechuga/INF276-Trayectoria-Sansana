@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Menu, X, Search, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react"
 import type { Task } from "@/types/kanban"
 import { useToast } from "@/hooks/use-toast"
+import { carreras } from "@/data/carreras"
+// Importar el cargador de datos con la ruta correcta
+import { getCarreraData } from "../data/data-loader"
 
 export default function AppContainer() {
   const { toast } = useToast()
@@ -19,75 +22,21 @@ export default function AppContainer() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Agregar estado para las carreras y la carrera seleccionada
-  const [carreras, setCarreras] = useState<{ nombre: string; link: string }[]>([])
+  // Estado para la carrera seleccionada
   const [selectedCarrera, setSelectedCarrera] = useState<{ nombre: string; link: string } | null>(null)
 
-  // Añadir estado para el filtro de departamento
+  // Estado para el filtro de departamento
   const [departmentFilter, setDepartmentFilter] = useState<string>("")
   const [departments, setDepartments] = useState<string[]>([])
 
-  // También modificar la función loadCarreras para usar el mismo enfoque seguro
-  // Buscar la función o el useEffect que carga las carreras y reemplazarlo con:
-
-  // Cargar las carreras al inicio
+  // Inicializar la carrera seleccionada
   useEffect(() => {
-    const loadCarreras = async () => {
-      try {
-        const response = await fetch("/data/carreras.json", {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache",
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error(`Error HTTP: ${response.status} ${response.statusText}`)
-        }
-
-        // Convertir la respuesta a texto primero para depuración
-        const text = await response.text()
-
-        // Intentar parsear el texto como JSON
-        let data
-        try {
-          data = JSON.parse(text)
-        } catch (parseError) {
-          console.error("Error parsing JSON:", parseError)
-          console.error("Response text:", text)
-          throw new Error(
-            `Error al parsear JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
-          )
-        }
-
-        if (!data || !data.carreras || !Array.isArray(data.carreras)) {
-          throw new Error("Formato de datos inválido: no se encontraron carreras")
-        }
-
-        setCarreras(data.carreras)
-        // Establecer la primera carrera como seleccionada por defecto
-        if (data.carreras.length > 0) {
-          setSelectedCarrera(data.carreras[0])
-        }
-      } catch (error) {
-        console.error("Error loading carreras:", error)
-        setError(error instanceof Error ? error.message : "Error desconocido al cargar las carreras")
-        toast({
-          title: "Error al cargar carreras",
-          description: `No se pudieron cargar las carreras: ${error instanceof Error ? error.message : error}`,
-          variant: "destructive",
-        })
-      }
+    if (carreras.length > 0) {
+      setSelectedCarrera(carreras[0])
     }
+  }, [])
 
-    loadCarreras()
-  }, [toast])
-
-  // Modificar la función loadCarreraData para manejar mejor las respuestas de fetch
-  // Buscar la función loadCarreraData y reemplazarla con esta versión mejorada:
-
+  // Reemplazar la función loadCarreraData completa con esta implementación:
   const loadCarreraData = async (carreraLink: string) => {
     if (!carreraLink) return
 
@@ -95,41 +44,14 @@ export default function AppContainer() {
     setError(null)
 
     try {
-      // Usar una ruta relativa más simple y directa
-      const response = await fetch(`/data/data_${carreraLink}.json`, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache",
-        },
-      })
+      // Usar la función getCarreraData en lugar de importación dinámica
+      const dataModule = getCarreraData(carreraLink)
 
-      // Verificar si la respuesta es exitosa
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status} ${response.statusText}`)
-      }
-
-      // Convertir la respuesta a texto primero para depuración
-      const text = await response.text()
-
-      // Intentar parsear el texto como JSON
-      let data
-      try {
-        data = JSON.parse(text)
-      } catch (parseError) {
-        console.error("Error parsing JSON:", parseError)
-        console.error("Response text:", text)
-        throw new Error(
-          `Error al parsear JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
-        )
-      }
-
-      if (!data || !data.cursos || !Array.isArray(data.cursos)) {
+      if (!dataModule || !dataModule.cursos || !Array.isArray(dataModule.cursos)) {
         throw new Error("Formato de datos inválido: no se encontraron cursos")
       }
 
-      const cursos = data.cursos
+      const cursos = dataModule.cursos
 
       // Convertir los cursos a tareas
       const tasks: Task[] = cursos.map((curso: any) => ({
@@ -219,8 +141,8 @@ export default function AppContainer() {
     }
   }
 
-  // Si no hay carreras cargadas aún, mostrar un indicador de carga
-  if (carreras.length === 0 || !selectedCarrera) {
+  // Si no hay carrera seleccionada aún, mostrar un indicador de carga
+  if (!selectedCarrera) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-gray-950">
         <div className="text-center">
@@ -303,8 +225,6 @@ export default function AppContainer() {
               </Button>
             </div>
           ) : (
-            // Luego, reemplazar el div que muestra las tarjetas en el sidebar con el componente TaskCard
-            // Buscar y reemplazar este bloque:
             <div className="space-y-2">
               {filteredTasks.map((task) => (
                 <div
