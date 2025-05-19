@@ -4,12 +4,15 @@ import { useState, useEffect } from "react"
 import KanbanBoard from "./kanban-board"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Menu, X, Search, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react"
+// Primero, importar el icono de GraduationCap
+import { Menu, X, Search, ChevronLeft, ChevronRight, AlertCircle, GraduationCap } from "lucide-react"
 import type { Task } from "@/types/kanban"
 import { useToast } from "@/hooks/use-toast"
 import { carreras } from "@/data/carreras"
 // Importar el cargador de datos con la ruta correcta
 import { getCarreraData } from "../data/data-loader"
+// Primero, importar el componente TaskCard
+import TaskCard from "./task-card"
 
 export default function AppContainer() {
   const { toast } = useToast()
@@ -244,18 +247,14 @@ export default function AppContainer() {
               {filteredTasks.map((task) => (
                 <div
                   key={task.id}
-                  className={`cursor-pointer ${selectedTask?.id === task.id ? "ring-2 ring-blue-500" : ""}`}
-                  onClick={() => setSelectedTask(task)}
+                  className={`${selectedTask?.id === task.id ? "ring-2 ring-blue-500 rounded-md" : ""}`}
                 >
-                  <div className="p-2 bg-white dark:bg-gray-700 rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                    <h3 className="font-medium text-sm text-gray-800 dark:text-gray-200 line-clamp-1">
-                      {task.nombre || task.title}
-                    </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">{task.codigo}</p>
-                    {task.departamento && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{task.departamento}</p>
-                    )}
-                  </div>
+                  <TaskCard
+                    task={task}
+                    onClick={() => setSelectedTask(task)}
+                    onDuplicate={() => {}} // No necesitamos duplicar desde el sidebar
+                    className="mb-2" // Añadir margen inferior para separar las tarjetas
+                  />
                 </div>
               ))}
               {filteredTasks.length === 0 && !loading && !error && (
@@ -286,7 +285,9 @@ export default function AppContainer() {
         <header className="h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex items-center justify-between px-4 lg:px-6">
           {/* Agregar selector de carreras en el header */}
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-gray-800 dark:text-gray-200">Trayectoria Sansana</h1>
+            <div className="flex items-center">
+              <GraduationCap className="h-6 w-6 text-gray-800 dark:text-gray-200" />
+            </div>
             <select
               className="ml-4 px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
               value={selectedCarrera?.link || ""}

@@ -55,13 +55,19 @@ export default function KanbanBoard({
   useEffect(() => {
     if (!isInitialized.current) {
       try {
-        // Crear solo la columna del primer semestre
+        // Crear dos columnas: primer y segundo semestre
         const initialColumns: ColumnType[] = [
           {
             id: "column-1",
             title: "I",
             tasks: [],
-            color: "bg-blue-50 dark:bg-blue-900/30",
+            // Sin color predefinido
+          },
+          {
+            id: "column-2",
+            title: "II",
+            tasks: [],
+            // Sin color predefinido
           },
         ]
 
@@ -608,7 +614,7 @@ export default function KanbanBoard({
         {/* Agrupar columnas por año */}
         {(() => {
           // Organizar columnas por años (2 columnas por año)
-          const yearGroups: { year: number; columns: ColumnType[] }[] = []
+          const yearGroups: { year: number; columns: ColumnType[] } = []
 
           for (let i = 0; i < columns.length; i += 2) {
             const yearColumns = columns.slice(i, i + 2)
@@ -675,13 +681,13 @@ export default function KanbanBoard({
     <div className="flex flex-col h-full bg-slate-50 dark:bg-gray-950">
       <header className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-4 shadow-sm">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Kanban Board</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Trayectoria Sansana</h1>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="board">Board</TabsTrigger>
-            <TabsTrigger value="automation">Automation</TabsTrigger>
+            <TabsTrigger value="board">Malla Personal</TabsTrigger>
+            <TabsTrigger value="automation">Notas</TabsTrigger>
           </TabsList>
 
           <TabsContent value="board" className="mt-4">

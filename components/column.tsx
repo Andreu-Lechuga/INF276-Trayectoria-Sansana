@@ -77,7 +77,12 @@ export default function Column({
   }
 
   const handleColorChange = (color: string) => {
-    onUpdateColumn(column.id, { color })
+    // Si el color es el predeterminado, establecerlo como undefined para usar el color por defecto
+    if (color === "bg-white dark:bg-gray-800") {
+      onUpdateColumn(column.id, { color: undefined })
+    } else {
+      onUpdateColumn(column.id, { color })
+    }
   }
 
   // Get header color class or default to white/dark gray
