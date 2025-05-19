@@ -7,6 +7,7 @@ export const cursos = [
     creditos: 3,
     horas: 5,
     departamento: "FI",
+    color: "#8EAAD7", // Color pastel para FI - Fundamentos de Informática
     prerrequisitos: [],
     periodo: "A",
     semestre: 1,
@@ -18,6 +19,7 @@ export const cursos = [
     creditos: 5,
     horas: 8,
     departamento: "PC",
+    color: "#80C4C8", // Color pastel para PC - Plan Común
     prerrequisitos: [],
     periodo: "A",
     semestre: 1,
@@ -29,6 +31,7 @@ export const cursos = [
     creditos: 3,
     horas: 6,
     departamento: "PC",
+    color: "#80C4C8", // Color pastel para PC - Plan Común
     prerrequisitos: [],
     periodo: "A",
     semestre: 1,
@@ -40,6 +43,7 @@ export const cursos = [
     creditos: 2,
     horas: 3,
     departamento: "HUM",
+    color: "#D8DB8E", // Color pastel para HUM - Humanistas, libres y deportes
     prerrequisitos: [],
     periodo: "A",
     semestre: 1,
@@ -51,6 +55,7 @@ export const cursos = [
     creditos: 1,
     horas: 2,
     departamento: "HUM",
+    color: "#D8DB8E", // Color pastel para HUM - Humanistas, libres y deportes
     prerrequisitos: [],
     periodo: "A",
     semestre: 1,
@@ -62,6 +67,7 @@ export const cursos = [
     creditos: 3,
     horas: 5,
     departamento: "PC",
+    color: "#80C4C8", // Color pastel para PC - Plan Común
     prerrequisitos: [],
     periodo: "A",
     semestre: 2,
@@ -73,6 +79,7 @@ export const cursos = [
     creditos: 5,
     horas: 7,
     departamento: "PC",
+    color: "#80C4C8", // Color pastel para PC - Plan Común
     prerrequisitos: [2], // MAT-021
     periodo: "A",
     semestre: 2,
@@ -84,6 +91,7 @@ export const cursos = [
     creditos: 5,
     horas: 8,
     departamento: "PC",
+    color: "#80C4C8", // Color pastel para PC - Plan Común
     prerrequisitos: [2, 3], // MAT-021, FIS-100
     periodo: "A",
     semestre: 2,
@@ -95,6 +103,7 @@ export const cursos = [
     creditos: 2,
     horas: 3,
     departamento: "TIN",
+    color: "#E5A5B8", // Color pastel para TIN - Transversal e Integración
     prerrequisitos: [],
     periodo: "A",
     semestre: 2,
@@ -106,6 +115,7 @@ export const cursos = [
     creditos: 2,
     horas: 3,
     departamento: "HUM",
+    color: "#D8DB8E", // Color pastel para HUM - Humanistas, libres y deportes
     prerrequisitos: [],
     periodo: "A",
     semestre: 2,
@@ -117,6 +127,7 @@ export const cursos = [
     creditos: 1,
     horas: 2,
     departamento: "HUM",
+    color: "#D8DB8E", // Color pastel para HUM - Humanistas, libres y deportes
     prerrequisitos: [5], // DEW-100
     periodo: "A",
     semestre: 2,

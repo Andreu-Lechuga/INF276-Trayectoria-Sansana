@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import KanbanBoard from "./kanban-board"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-// Primero, importar el icono de GraduationCap
 import { Menu, X, Search, ChevronLeft, ChevronRight, AlertCircle, GraduationCap } from "lucide-react"
 import type { Task } from "@/types/kanban"
 import { useToast } from "@/hooks/use-toast"
@@ -13,6 +12,8 @@ import { carreras } from "@/data/carreras"
 import { getCarreraData } from "../data/data-loader"
 // Primero, importar el componente TaskCard
 import TaskCard from "./task-card"
+// Añadir la importación del componente ColorLegend
+import ColorLegend from "./color-legend"
 
 export default function AppContainer() {
   const { toast } = useToast()
@@ -24,6 +25,8 @@ export default function AppContainer() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Modificar el estado departmentColors para incluir las descripciones
+  const [departmentColors, setDepartmentColors] = useState<Record<string, [string, string]>>({})
 
   // Estado para la carrera seleccionada
   const [selectedCarrera, setSelectedCarrera] = useState<{ nombre: string; link: string } | null>(null)
@@ -31,6 +34,27 @@ export default function AppContainer() {
   // Estado para el filtro de departamento
   const [departmentFilter, setDepartmentFilter] = useState<string>("")
   const [departments, setDepartments] = useState<string[]>([])
+
+  // Cargar los colores de departamentos
+  useEffect(() => {
+    // Actualizar la función loadDepartmentColors
+    const loadDepartmentColors = async () => {
+      try {
+        const response = await fetch("/data/colors_INF.json")
+        if (!response.ok) {
+          throw new Error(`Error cargando colores: ${response.status}`)
+        }
+        const data = await response.json()
+
+        // Mantener el formato original del JSON con color y descripción
+        setDepartmentColors(data)
+      } catch (error) {
+        console.error("Error cargando colores de departamentos:", error)
+      }
+    }
+
+    loadDepartmentColors()
+  }, [])
 
   // Inicializar la carrera seleccionada
   useEffect(() => {
@@ -56,7 +80,7 @@ export default function AppContainer() {
 
       const cursos = dataModule.cursos
 
-      // Convertir los cursos a tareas
+      // Actualizar la función loadCarreraData para usar solo el primer elemento del array de colores
       const tasks: Task[] = cursos.map((curso: any) => ({
         id: `curso-${curso.codigo}`,
         title: curso.nombre,
@@ -65,6 +89,7 @@ export default function AppContainer() {
         creditos: curso.creditos,
         horas: curso.horas,
         departamento: curso.departamento,
+        color: curso.color || (departmentColors[curso.departamento] ? departmentColors[curso.departamento][0] : null),
         prerrequisitos: curso.prerrequisitos || [],
         periodo: curso.periodo || "",
         semestre: curso.semestre,
@@ -123,7 +148,7 @@ export default function AppContainer() {
     if (selectedCarrera) {
       loadCarreraData(selectedCarrera.link)
     }
-  }, [selectedCarrera])
+  }, [selectedCarrera, departmentColors])
 
   // Actualizar el efecto de filtrado para incluir el filtro de departamento
   useEffect(() => {
@@ -333,6 +358,11 @@ export default function AppContainer() {
             />
           )}
         </main>
+
+        {/* Leyenda de colores */}
+        <div className="px-4 py-2">
+          {Object.keys(departmentColors).length > 0 && <ColorLegend colors={departmentColors} />}
+        </div>
 
         {/* Footer */}
         <footer className="h-12 bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex items-center justify-center px-4">

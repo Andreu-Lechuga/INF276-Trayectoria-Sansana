@@ -13,6 +13,7 @@ export interface Task {
   creditos: number
   horas: number
   departamento: string
+  color?: string // Añadido campo color opcional
   prerrequisitos: number[] // Cambiado de string[] a number[]
   periodo: string
   semestre: number

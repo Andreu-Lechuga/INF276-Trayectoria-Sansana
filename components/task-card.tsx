@@ -10,7 +10,7 @@ interface TaskCardProps {
   task: Task
   onClick: () => void
   onDuplicate: () => void
-  className?: string // Añadir esta prop opcional
+  className?: string
 }
 
 export default function TaskCard({ task, onClick, onDuplicate, className = "" }: TaskCardProps) {
@@ -19,14 +19,19 @@ export default function TaskCard({ task, onClick, onDuplicate, className = "" }:
     onDuplicate()
   }
 
+  // Usar el color del departamento si está disponible
+  const headerStyle = task.color
+    ? { backgroundColor: task.color, color: isLightColor(task.color) ? "#000" : "#fff" }
+    : {}
+
   return (
     <div
       className={`mb-2 bg-white dark:bg-gray-800 rounded-md shadow-sm border dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer group overflow-hidden ${className}`}
       onClick={onClick}
     >
-      {/* Header - Sigla del ramo al extremo izquierdo */}
-      <div className="flex justify-between items-center p-1.5 bg-gray-50 dark:bg-gray-750">
-        <div className="font-mono text-sm font-medium text-gray-700 dark:text-gray-300">{task.codigo}</div>
+      {/* Header - Sigla del ramo con color de departamento */}
+      <div className="flex justify-between items-center p-1.5" style={headerStyle}>
+        <div className="font-mono text-sm font-medium">{task.codigo}</div>
         <Button
           variant="ghost"
           size="icon"
@@ -56,4 +61,19 @@ export default function TaskCard({ task, onClick, onDuplicate, className = "" }:
       </div>
     </div>
   )
+}
+
+// Función para determinar si un color es claro u oscuro
+function isLightColor(color: string): boolean {
+  // Convertir color hexadecimal a RGB
+  const hex = color.replace("#", "")
+  const r = Number.parseInt(hex.substr(0, 2), 16)
+  const g = Number.parseInt(hex.substr(2, 2), 16)
+  const b = Number.parseInt(hex.substr(4, 2), 16)
+
+  // Calcular luminosidad (fórmula estándar)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+
+  // Si la luminosidad es mayor a 0.5, es un color claro
+  return luminance > 0.5
 }
