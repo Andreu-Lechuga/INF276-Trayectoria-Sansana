@@ -63,7 +63,7 @@ export default function AppContainer() {
     }
   }, [])
 
-  // Reemplazar la función loadCarreraData completa con esta implementación:
+  // Actualizar la función loadCarreraData para manejar mejor los casos donde departmentColors no está disponible
   const loadCarreraData = async (carreraLink: string) => {
     if (!carreraLink) return
 
@@ -81,26 +81,36 @@ export default function AppContainer() {
       const cursos = dataModule.cursos
 
       // Actualizar la función loadCarreraData para usar solo el primer elemento del array de colores
-      const tasks: Task[] = cursos.map((curso: any) => ({
-        id: `curso-${curso.codigo}`,
-        title: curso.nombre,
-        nombre: curso.nombre,
-        codigo: curso.codigo,
-        creditos: curso.creditos,
-        horas: curso.horas,
-        departamento: curso.departamento,
-        color: curso.color || (departmentColors[curso.departamento] ? departmentColors[curso.departamento][0] : null),
-        prerrequisitos: curso.prerrequisitos || [],
-        periodo: curso.periodo || "",
-        semestre: curso.semestre,
-        description: "",
-        status: "To Do", // Inicialmente todos como "To Do"
-        dueDate: null,
-        subtasks: [],
-        customFields: [],
-        createdAt: new Date().toISOString(),
-        cursoId: curso.id, // Añadir el ID numérico del curso
-      }))
+      // y manejar el caso donde departmentColors[curso.departamento] es undefined
+      const tasks: Task[] = cursos.map((curso: any) => {
+        let colorValue = null
+        if (curso.color) {
+          colorValue = curso.color
+        } else if (departmentColors && curso.departamento && departmentColors[curso.departamento]) {
+          colorValue = departmentColors[curso.departamento][0]
+        }
+
+        return {
+          id: `curso-${curso.codigo}`,
+          title: curso.nombre,
+          nombre: curso.nombre,
+          codigo: curso.codigo,
+          creditos: curso.creditos,
+          horas: curso.horas,
+          departamento: curso.departamento,
+          color: colorValue,
+          prerrequisitos: curso.prerrequisitos || [],
+          periodo: curso.periodo || "",
+          semestre: curso.semestre,
+          description: "",
+          status: "To Do", // Inicialmente todos como "To Do"
+          dueDate: null,
+          subtasks: [],
+          customFields: [],
+          createdAt: new Date().toISOString(),
+          cursoId: curso.id, // Añadir el ID numérico del curso
+        }
+      })
 
       // Extraer departamentos únicos
       const uniqueDepartments = Array.from(new Set(tasks.map((task) => task.departamento)))
@@ -361,7 +371,7 @@ export default function AppContainer() {
 
         {/* Leyenda de colores */}
         <div className="px-4 py-2">
-          {Object.keys(departmentColors).length > 0 && <ColorLegend colors={departmentColors} />}
+          {departmentColors && Object.keys(departmentColors).length > 0 && <ColorLegend colors={departmentColors} />}
         </div>
 
         {/* Footer */}

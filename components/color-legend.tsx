@@ -13,6 +13,11 @@ interface ColorLegendProps {
 export default function ColorLegend({ colors }: ColorLegendProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
+  // Si colors es undefined o vacío, no renderizar nada
+  if (!colors || Object.keys(colors).length === 0) {
+    return null
+  }
+
   return (
     <Card className="w-full shadow-sm">
       <CardHeader
