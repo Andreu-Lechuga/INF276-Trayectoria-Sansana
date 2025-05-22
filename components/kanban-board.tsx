@@ -4,8 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd"
 import { Plus, AlertCircle } from "lucide-react"
 import Column from "./column"
-import TaskDetailSidebar from "./task-detail-sidebar"
-import AutomationRules from "./automation-rules"
+import TaskDetailModal from "./task-detail-modal"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
@@ -13,6 +12,7 @@ import type { Task, Column as ColumnType, Rule } from "@/types/kanban"
 import { generateId } from "@/lib/utils"
 import YearGroup from "./year-group"
 import DebugBoard from "./debug-board"
+import SemesterNavigation from "./semester-navigation"
 
 interface KanbanBoardProps {
   initialTasks?: Task[]
@@ -656,12 +656,13 @@ export default function KanbanBoard({
   // Automation content for the "automation" tab
   const renderAutomationContent = () => (
     <div className="max-w-4xl mx-auto">
-      <AutomationRules
-        rules={rules}
+      <SemesterNavigation
         columns={columns}
-        onAddRule={addRule}
-        onUpdateRule={updateRule}
-        onDeleteRule={deleteRule}
+        allTasks={getAllTasks()}
+        onSelectSemester={(columnId) => {
+          // Aquí se puede implementar lógica adicional si es necesario
+          console.log(`Semestre seleccionado: ${columnId}`)
+        }}
       />
     </div>
   )
@@ -701,7 +702,7 @@ export default function KanbanBoard({
       </header>
 
       {selectedTask && (
-        <TaskDetailSidebar
+        <TaskDetailModal
           task={selectedTask}
           onClose={() => {
             setSelectedTask(null)

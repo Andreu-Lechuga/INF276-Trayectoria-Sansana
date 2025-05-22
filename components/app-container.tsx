@@ -31,9 +31,9 @@ export default function AppContainer() {
   // Estado para la carrera seleccionada
   const [selectedCarrera, setSelectedCarrera] = useState<{ nombre: string; link: string } | null>(null)
 
-  // Estado para el filtro de departamento
-  const [departmentFilter, setDepartmentFilter] = useState<string>("")
-  const [departments, setDepartments] = useState<string[]>([])
+  // Cambiar el estado departmentFilter para que refleje las nuevas opciones
+  // Reemplazar:
+  const [courseFilter, setCourseFilter] = useState<string>("todos")
 
   // Cargar los colores de departamentos
   useEffect(() => {
@@ -112,11 +112,8 @@ export default function AppContainer() {
         }
       })
 
-      // Extraer departamentos únicos
-      const uniqueDepartments = Array.from(new Set(tasks.map((task) => task.departamento)))
-        .filter(Boolean)
-        .sort()
-      setDepartments(uniqueDepartments)
+      // Eliminar la extracción de departamentos únicos en la función loadCarreraData
+      // Buscar y eliminar estas líneas:
 
       // Separar los cursos del primer semestre
       const primerSemestreTasks = tasks.filter((task) => task.semestre === 1)
@@ -174,13 +171,16 @@ export default function AppContainer() {
       )
     }
 
-    // Aplicar filtro de departamento
-    if (departmentFilter) {
-      filtered = filtered.filter((task) => task.departamento === departmentFilter)
+    // Aplicar filtro de cursos
+    // Por ahora solo implementamos el filtro "todos" (que no filtra nada)
+    // Las otras opciones se implementarán después
+    if (courseFilter !== "todos") {
+      // Aquí irá la implementación de los otros filtros
+      // Por ahora no hacemos nada adicional
     }
 
     setFilteredTasks(filtered)
-  }, [searchQuery, departmentFilter, allTasks])
+  }, [searchQuery, courseFilter, allTasks])
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen)
@@ -239,19 +239,16 @@ export default function AppContainer() {
             />
           </div>
 
-          {/* Selector de departamento */}
+          {/* Selector de filtro de cursos */}
           <div className="mt-4">
             <select
               className="w-full px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-              value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
+              value={courseFilter}
+              onChange={(e) => setCourseFilter(e.target.value)}
             >
-              <option value="">Todos los departamentos</option>
-              {departments.map((dept) => (
-                <option key={dept} value={dept}>
-                  {dept}
-                </option>
-              ))}
+              <option value="todos">Todos</option>
+              <option value="sugeridos">Sugeridos</option>
+              <option value="sin-desbloquear">Sin Desbloquear</option>
             </select>
           </div>
         </div>
