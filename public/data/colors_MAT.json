@@ -1,0 +1,13 @@
+{
+  "PC": ["#FFF2B8", "Plan Común"],
+  "CI": ["#B8E8FF", "Ciencias de Ingeniería"],
+  "IAA": ["#E8E8E8", "Ingeniería Aplicada e Integración"],
+  "FC": ["#FFD4B8", "Formación"],
+  "DEW": ["#F0FFB8", "DEFIDER"],
+  "ENG": ["#E8B8E8", "Inglés"],
+  "ICMATB": ["#B8E8B8", "Ciencias Basicas ICMAT"],
+  "ICMATA": ["#E8FFE8", "Ciencias Aplicadas ICMAT"],
+  "ELI": ["#B8C8E8", "Electivo de Ingeniería"],
+  "ELG": ["#FFB8B8", "Electivo de Gestión"],
+  "COMP": ["#E8D4B8", "Complementarios"]
+}

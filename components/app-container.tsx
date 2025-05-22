@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import KanbanBoard from "./kanban-board"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,11 +8,8 @@ import { Menu, X, Search, ChevronLeft, ChevronRight, AlertCircle, GraduationCap 
 import type { Task } from "@/types/kanban"
 import { useToast } from "@/hooks/use-toast"
 import { carreras } from "@/data/carreras"
-// Importar el cargador de datos con la ruta correcta
 import { getCarreraData } from "../data/data-loader"
-// Primero, importar el componente TaskCard
 import TaskCard from "./task-card"
-// Añadir la importación del componente ColorLegend
 import ColorLegend from "./color-legend"
 
 export default function AppContainer() {
@@ -25,143 +22,122 @@ export default function AppContainer() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // Modificar el estado departmentColors para incluir las descripciones
   const [departmentColors, setDepartmentColors] = useState<Record<string, [string, string]>>({})
-
-  // Estado para la carrera seleccionada
   const [selectedCarrera, setSelectedCarrera] = useState<{ nombre: string; link: string } | null>(null)
-
-  // Cambiar el estado departmentFilter para que refleje las nuevas opciones
-  // Reemplazar:
   const [courseFilter, setCourseFilter] = useState<string>("todos")
 
-  // Cargar los colores de departamentos
+  // Referencias para evitar bucles
+  const isLoadingRef = useRef(false)
+  const currentCarreraRef = useRef<string>("")
+
+  // Inicialización simple - solo una vez
   useEffect(() => {
-    // Actualizar la función loadDepartmentColors
-    const loadDepartmentColors = async () => {
-      try {
-        const response = await fetch("/data/colors_INF.json")
-        if (!response.ok) {
-          throw new Error(`Error cargando colores: ${response.status}`)
-        }
-        const data = await response.json()
-
-        // Mantener el formato original del JSON con color y descripción
-        setDepartmentColors(data)
-      } catch (error) {
-        console.error("Error cargando colores de departamentos:", error)
-      }
-    }
-
-    loadDepartmentColors()
-  }, [])
-
-  // Inicializar la carrera seleccionada
-  useEffect(() => {
-    if (carreras.length > 0) {
+    if (!selectedCarrera && carreras.length > 0) {
       setSelectedCarrera(carreras[0])
     }
   }, [])
 
-  // Actualizar la función loadCarreraData para manejar mejor los casos donde departmentColors no está disponible
-  const loadCarreraData = async (carreraLink: string) => {
-    if (!carreraLink) return
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      // Usar la función getCarreraData en lugar de importación dinámica
-      const dataModule = getCarreraData(carreraLink)
-
-      if (!dataModule || !dataModule.cursos || !Array.isArray(dataModule.cursos)) {
-        throw new Error("Formato de datos inválido: no se encontraron cursos")
+  // Función para cargar datos - simplificada
+  const loadCarreraData = useCallback(
+    async (carreraLink: string) => {
+      // Evitar cargas duplicadas
+      if (isLoadingRef.current || currentCarreraRef.current === carreraLink) {
+        return
       }
 
-      const cursos = dataModule.cursos
+      isLoadingRef.current = true
+      currentCarreraRef.current = carreraLink
+      setLoading(true)
+      setError(null)
 
-      // Actualizar la función loadCarreraData para usar solo el primer elemento del array de colores
-      // y manejar el caso donde departmentColors[curso.departamento] es undefined
-      const tasks: Task[] = cursos.map((curso: any) => {
-        let colorValue = null
-        if (curso.color) {
-          colorValue = curso.color
-        } else if (departmentColors && curso.departamento && departmentColors[curso.departamento]) {
-          colorValue = departmentColors[curso.departamento][0]
+      try {
+        const dataModule = getCarreraData(carreraLink)
+
+        if (!dataModule || !dataModule.cursos || !Array.isArray(dataModule.cursos)) {
+          throw new Error("Formato de datos inválido")
         }
 
-        return {
-          id: `curso-${curso.codigo}`,
-          title: curso.nombre,
-          nombre: curso.nombre,
-          codigo: curso.codigo,
-          creditos: curso.creditos,
-          horas: curso.horas,
-          departamento: curso.departamento,
-          color: colorValue,
-          prerrequisitos: curso.prerrequisitos || [],
-          periodo: curso.periodo || "",
-          semestre: curso.semestre,
-          description: "",
-          status: "To Do", // Inicialmente todos como "To Do"
-          dueDate: null,
-          subtasks: [],
-          customFields: [],
-          createdAt: new Date().toISOString(),
-          cursoId: curso.id, // Añadir el ID numérico del curso
+        const cursos = dataModule.cursos
+
+        // Cargar colores
+        let colorsData = {}
+        try {
+          const colorsResponse = await fetch(`/data/colors_${carreraLink}.json`)
+          if (colorsResponse.ok) {
+            colorsData = await colorsResponse.json()
+            setDepartmentColors(colorsData)
+          }
+        } catch (colorError) {
+          console.warn("Error cargando colores:", colorError)
         }
-      })
 
-      // Eliminar la extracción de departamentos únicos en la función loadCarreraData
-      // Buscar y eliminar estas líneas:
+        // Crear tareas
+        const tasks: Task[] = cursos.map((curso: any) => {
+          let colorValue = null
+          if (curso.color) {
+            colorValue = curso.color
+          } else if (colorsData && curso.departamento && colorsData[curso.departamento]) {
+            colorValue = colorsData[curso.departamento][0]
+          }
 
-      // Separar los cursos del primer semestre
-      const primerSemestreTasks = tasks.filter((task) => task.semestre === 1)
+          return {
+            id: `curso-${curso.codigo}`,
+            title: curso.nombre,
+            nombre: curso.nombre,
+            codigo: curso.codigo,
+            creditos: curso.creditos,
+            horas: curso.horas,
+            departamento: curso.departamento,
+            color: colorValue,
+            prerrequisitos: curso.prerrequisitos || [],
+            periodo: curso.periodo || "",
+            semestre: curso.semestre,
+            description: "",
+            status: "To Do",
+            dueDate: null,
+            subtasks: [],
+            customFields: [],
+            createdAt: new Date().toISOString(),
+            cursoId: curso.id,
+          }
+        })
 
-      // Guardar todos los cursos
-      setAllTasks(tasks)
+        const primerSemestreTasks = tasks.filter((task) => task.semestre === 1)
 
-      // Filtrar para el sidebar
-      setFilteredTasks(tasks)
-
-      // Actualizar el estado para indicar que tenemos cursos del primer semestre
-      if (primerSemestreTasks.length > 0) {
-        // Enviamos solo los cursos del primer semestre al tablero
+        // Actualizar estados de forma secuencial
+        setAllTasks(tasks)
+        setFilteredTasks(tasks)
         setBoardTasks(primerSemestreTasks)
+      } catch (error) {
+        console.error("Error loading carrera data:", error)
+        setError(error instanceof Error ? error.message : "Error desconocido")
+        toast({
+          title: "Error al cargar datos",
+          description: "No se pudieron cargar los datos de la carrera",
+          variant: "destructive",
+        })
+        setAllTasks([])
+        setFilteredTasks([])
+        setBoardTasks([])
+      } finally {
+        setLoading(false)
+        isLoadingRef.current = false
       }
+    },
+    [toast, selectedCarrera],
+  )
 
-      setLoading(false)
-    } catch (error) {
-      console.error("Error loading carrera data:", error)
-      setError(error instanceof Error ? error.message : "Error desconocido al cargar los datos")
-      setLoading(false)
-
-      // Mostrar un mensaje de error al usuario
-      toast({
-        title: "Error al cargar datos",
-        description: `No se pudieron cargar los datos de la carrera: ${error instanceof Error ? error.message : error}`,
-        variant: "destructive",
-      })
-
-      // Establecer tareas vacías para evitar errores en la interfaz
-      setAllTasks([])
-      setFilteredTasks([])
-      setBoardTasks([])
-    }
-  }
-
-  // Cargar los datos de la carrera seleccionada cuando cambie
+  // Cargar datos cuando cambie la carrera - simplificado
   useEffect(() => {
-    if (selectedCarrera) {
+    if (selectedCarrera && selectedCarrera.link !== currentCarreraRef.current) {
       loadCarreraData(selectedCarrera.link)
     }
-  }, [selectedCarrera, departmentColors])
+  }, [selectedCarrera?.link, loadCarreraData])
 
-  // Actualizar el efecto de filtrado para incluir el filtro de departamento
+  // Filtrado - simplificado
   useEffect(() => {
     let filtered = allTasks
 
-    // Aplicar filtro de búsqueda
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
@@ -171,30 +147,30 @@ export default function AppContainer() {
       )
     }
 
-    // Aplicar filtro de cursos
-    // Por ahora solo implementamos el filtro "todos" (que no filtra nada)
-    // Las otras opciones se implementarán después
-    if (courseFilter !== "todos") {
-      // Aquí irá la implementación de los otros filtros
-      // Por ahora no hacemos nada adicional
-    }
-
     setFilteredTasks(filtered)
-  }, [searchQuery, courseFilter, allTasks])
+  }, [searchQuery, allTasks])
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen)
   }
 
-  // Update tasks when they change in the KanbanBoard
-  const handleTasksChange = (updatedTasks: Task[]) => {
-    // Solo actualizar si hay tareas actualizadas y son diferentes de las actuales
-    if (updatedTasks.length > 0 && JSON.stringify(updatedTasks) !== JSON.stringify(boardTasks)) {
-      setBoardTasks(updatedTasks)
+  const handleCarreraChange = (carreraLink: string) => {
+    const carrera = carreras.find((c) => c.link === carreraLink)
+    if (carrera && carrera.link !== selectedCarrera?.link) {
+      setBoardTasks([]) // Limpiar tablero inmediatamente
+      setSelectedCarrera(carrera)
+      toast({
+        title: "Carrera cambiada",
+        description: `Se ha cargado la malla de ${carrera.nombre}`,
+      })
     }
   }
 
-  // Si no hay carrera seleccionada aún, mostrar un indicador de carga
+  // Función simple para manejar cambios de tareas
+  const handleTasksChange = (updatedTasks: Task[]) => {
+    // No hacer nada por ahora para evitar bucles
+  }
+
   if (!selectedCarrera) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-gray-950">
@@ -224,7 +200,7 @@ export default function AppContainer() {
           <div className="flex-1 text-right">Cursos</div>
         </div>
 
-        {/* Search bar at the top */}
+        {/* Search bar */}
         <div className="p-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -233,13 +209,10 @@ export default function AppContainer() {
               placeholder="Buscar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`pl-9 bg-gray-100 dark:bg-gray-700 border-0 rounded-full transition-all ${
-                isSidebarOpen ? "w-full" : "w-0 p-0 opacity-0 lg:hidden"
-              }`}
+              className="pl-9 bg-gray-100 dark:bg-gray-700 border-0 rounded-full"
             />
           </div>
 
-          {/* Selector de filtro de cursos */}
           <div className="mt-4">
             <select
               className="w-full px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
@@ -254,10 +227,7 @@ export default function AppContainer() {
         </div>
 
         {/* Task cards container */}
-        <div
-          className={`flex-1 p-2 overflow-auto ${isSidebarOpen ? "" : "hidden lg:block"}`}
-          style={{ maxHeight: "calc(100vh - 140px)" }}
-        >
+        <div className="flex-1 p-2 overflow-auto" style={{ maxHeight: "calc(100vh - 140px)" }}>
           {loading ? (
             <div className="text-center py-4 text-gray-500 dark:text-gray-400">Cargando cursos...</div>
           ) : error ? (
@@ -281,12 +251,7 @@ export default function AppContainer() {
                   key={task.id}
                   className={`${selectedTask?.id === task.id ? "ring-2 ring-blue-500 rounded-md" : ""}`}
                 >
-                  <TaskCard
-                    task={task}
-                    onClick={() => setSelectedTask(task)}
-                    onDuplicate={() => {}} // No necesitamos duplicar desde el sidebar
-                    className="mb-2" // Añadir margen inferior para separar las tarjetas
-                  />
+                  <TaskCard task={task} onClick={() => setSelectedTask(task)} onDuplicate={() => {}} className="mb-2" />
                 </div>
               ))}
               {filteredTasks.length === 0 && !loading && !error && (
@@ -301,7 +266,7 @@ export default function AppContainer() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Toggle button outside sidebar */}
+        {/* Toggle button */}
         <div className="absolute top-3 right-0 z-50 lg:block hidden">
           <Button
             variant="outline"
@@ -315,7 +280,6 @@ export default function AppContainer() {
 
         {/* Header */}
         <header className="h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex items-center justify-between px-4 lg:px-6">
-          {/* Agregar selector de carreras en el header */}
           <div className="flex items-center gap-3">
             <div className="flex items-center">
               <GraduationCap className="h-6 w-6 text-gray-800 dark:text-gray-200" />
@@ -323,12 +287,7 @@ export default function AppContainer() {
             <select
               className="ml-4 px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
               value={selectedCarrera?.link || ""}
-              onChange={(e) => {
-                const carrera = carreras.find((c) => c.link === e.target.value)
-                if (carrera) {
-                  setSelectedCarrera(carrera)
-                }
-              }}
+              onChange={(e) => handleCarreraChange(e.target.value)}
               disabled={loading}
             >
               {carreras.map((carrera) => (
