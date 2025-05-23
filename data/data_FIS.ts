@@ -7,7 +7,6 @@ export const cursos = [
     creditos: 5,
     horas: 5,
     departamento: "PC",
-    color: "#E8C5FF", // Color pastel para PC - Plan Común
     prerrequisitos: [],
     periodo: "",
     semestre: 1,
@@ -19,7 +18,6 @@ export const cursos = [
     creditos: 8,
     horas: 8,
     departamento: "MAT",
-    color: "#B8C5FF", // Color pastel para MAT - Matemáticas
     prerrequisitos: [],
     periodo: "A",
     semestre: 1,
@@ -31,7 +29,6 @@ export const cursos = [
     creditos: 6,
     horas: 6,
     departamento: "FIS",
-    color: "#D4F5A3", // Color pastel para FIS - Física
     prerrequisitos: [],
     periodo: "A",
     semestre: 1,
@@ -43,7 +40,6 @@ export const cursos = [
     creditos: 7,
     horas: 7,
     departamento: "LIC",
-    color: "#C5F7E8", // Color pastel para LIC - Licenciatura
     prerrequisitos: [],
     periodo: "",
     semestre: 1,
@@ -55,7 +51,6 @@ export const cursos = [
     creditos: 2,
     horas: 2,
     departamento: "DEW",
-    color: "#FFB8B8", // Color pastel para DEW - DEFIDER
     prerrequisitos: [],
     periodo: "",
     semestre: 1,
@@ -67,7 +62,6 @@ export const cursos = [
     creditos: 5,
     horas: 5,
     departamento: "PC",
-    color: "#E8C5FF", // Color pastel para PC - Plan Común
     prerrequisitos: [],
     periodo: "",
     semestre: 2,
@@ -79,7 +73,6 @@ export const cursos = [
     creditos: 7,
     horas: 7,
     departamento: "MAT",
-    color: "#B8C5FF", // Color pastel para MAT - Matemáticas
     prerrequisitos: [2], // MAT-021
     periodo: "A",
     semestre: 2,
@@ -91,7 +84,6 @@ export const cursos = [
     creditos: 8,
     horas: 8,
     departamento: "FIS",
-    color: "#D4F5A3", // Color pastel para FIS - Física
     prerrequisitos: [7, 3], // MAT-022, FIS-110
     periodo: "A",
     semestre: 2,
@@ -103,7 +95,6 @@ export const cursos = [
     creditos: 3,
     horas: 3,
     departamento: "HUM",
-    color: "#FFD4B8", // Color pastel para HUM - Humanistas
     prerrequisitos: [],
     periodo: "",
     semestre: 2,
@@ -115,7 +106,6 @@ export const cursos = [
     creditos: 2,
     horas: 2,
     departamento: "DEW",
-    color: "#FFB8B8", // Color pastel para DEW - DEFIDER
     prerrequisitos: [5], // DEW-100
     periodo: "",
     semestre: 2,

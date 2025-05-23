@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Droppable, Draggable } from "@hello-pangea/dnd"
-import { MoreHorizontal, Trash2, Edit, Palette } from "lucide-react"
+import { MoreHorizontal, Trash2, Edit, Palette, ArrowLeft } from "lucide-react"
 import TaskCard from "./task-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,7 +12,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import type { Task, Column as ColumnType } from "@/types/kanban"
 import { generateId } from "@/lib/utils"
 
-// Add predefined colors with dark mode variants
 const COLUMN_COLORS = [
   { name: "Default", value: "bg-white dark:bg-gray-800" },
   { name: "Blue", value: "bg-blue-50 dark:bg-blue-900/30" },
@@ -30,8 +29,8 @@ interface ColumnProps {
   onTaskClick: (task: Task) => void
   onDeleteColumn: () => void
   onUpdateColumn: (columnId: string, updates: Partial<ColumnType>) => void
-  onDuplicateTask: (task: Task, columnId: string) => void
-  toggleSidebar: () => void // Nueva prop para activar el sidebar
+  toggleSidebar: () => void
+  onMoveTaskToSidebar?: (taskId: string) => void
 }
 
 export default function Column({
@@ -40,14 +39,13 @@ export default function Column({
   onTaskClick,
   onDeleteColumn,
   onUpdateColumn,
-  onDuplicateTask,
   toggleSidebar,
+  onMoveTaskToSidebar,
 }: ColumnProps) {
   const [isAddingTask, setIsAddingTask] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState("")
   const [newTaskDescription, setNewTaskDescription] = useState("")
 
-  // Actualizar la función handleAddTask para crear tareas con la estructura correcta
   const handleAddTask = () => {
     if (!newTaskTitle.trim()) return
 
@@ -77,7 +75,6 @@ export default function Column({
   }
 
   const handleColorChange = (color: string) => {
-    // Si el color es el predeterminado, establecerlo como undefined para usar el color por defecto
     if (color === "bg-white dark:bg-gray-800") {
       onUpdateColumn(column.id, { color: undefined })
     } else {
@@ -85,23 +82,25 @@ export default function Column({
     }
   }
 
-  // Get header color class or default to white/dark gray
+  const handleMoveToSidebar = (taskId: string) => {
+    if (onMoveTaskToSidebar) {
+      onMoveTaskToSidebar(taskId)
+    }
+  }
+
   const headerColorClass = column.color || "bg-white dark:bg-gray-800"
 
   return (
     <div className="shrink-0 w-52 flex flex-col bg-gray-50 dark:bg-gray-900 rounded-md shadow-sm">
       <div className={`p-3 flex items-center border-b rounded-t-md ${headerColorClass}`}>
-        {/* Contador de ramos al extremo izquierdo */}
         <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
           {column.tasks.length}
         </span>
 
-        {/* Título centrado - usando flex-1 y text-center en lugar de posicionamiento absoluto */}
         <h3 className="flex-1 font-semibold text-base text-gray-700 dark:text-gray-200 text-center mx-2">
           {column.title}
         </h3>
 
-        {/* Menú de opciones al extremo derecho */}
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 ml-auto">
@@ -148,49 +147,85 @@ export default function Column({
       </div>
 
       <Droppable droppableId={column.id}>
-        {(provided) => (
-          <div ref={provided.innerRef} {...provided.droppableProps} className="flex-1 p-2 overflow-y-auto">
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className={`flex-1 p-2 overflow-y-auto min-h-[200px] ${
+              snapshot.isDraggingOver ? "bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-300 dark:ring-blue-600" : ""
+            }`}
+            data-is-droppable="true"
+          >
             {column.tasks.map((task, index) => (
               <Draggable key={task.id} draggableId={task.id} index={index}>
-                {(provided) => (
-                  <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-                    <TaskCard
-                      task={task}
-                      onClick={() => onTaskClick(task)}
-                      onDuplicate={() => onDuplicateTask(task, column.id)}
-                    />
+                {(provided, snapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                    className={`mb-2 ${snapshot.isDragging ? "dragging-item" : ""}`}
+                    style={{
+                      ...provided.draggableProps.style,
+                    }}
+                    data-is-dragging={snapshot.isDragging ? "true" : "false"}
+                  >
+                    <div className="relative group">
+                      <TaskCard task={task} onClick={() => onTaskClick(task)} onDuplicate={() => {}} />
+                      {/* Botón para devolver al sidebar */}
+                      {onMoveTaskToSidebar && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-gray-800 shadow-sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleMoveToSidebar(task.id)
+                          }}
+                          title="Devolver a cursos disponibles"
+                        >
+                          <ArrowLeft className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
               </Draggable>
             ))}
             {provided.placeholder}
 
+            {/* Indicador visual cuando está vacía */}
+            {column.tasks.length === 0 && (
+              <div className="flex items-center justify-center h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md">
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Arrastra cursos aquí</p>
+              </div>
+            )}
+
             {isAddingTask ? (
               <div className="mt-2 p-3 bg-white dark:bg-gray-800 rounded-md shadow-sm border dark:border-gray-700">
                 <Label htmlFor="task-title" className="dark:text-gray-200">
-                  Task Title
+                  Título de la tarea
                 </Label>
                 <Input
                   id="task-title"
                   value={newTaskTitle}
                   onChange={(e) => setNewTaskTitle(e.target.value)}
-                  placeholder="Enter task title"
+                  placeholder="Ingresa el título de la tarea"
                   className="mb-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
                 />
                 <Label htmlFor="task-description" className="dark:text-gray-200">
-                  Description (optional)
+                  Descripción (opcional)
                 </Label>
                 <Textarea
                   id="task-description"
                   value={newTaskDescription}
                   onChange={(e) => setNewTaskDescription(e.target.value)}
-                  placeholder="Enter task description"
+                  placeholder="Ingresa la descripción de la tarea"
                   className="mb-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
                   rows={3}
                 />
                 <div className="flex gap-2">
                   <Button size="sm" onClick={handleAddTask}>
-                    Add
+                    Añadir
                   </Button>
                   <Button
                     size="sm"
@@ -198,7 +233,7 @@ export default function Column({
                     onClick={() => setIsAddingTask(false)}
                     className="dark:border-gray-600 dark:text-gray-200"
                   >
-                    Cancel
+                    Cancelar
                   </Button>
                 </div>
               </div>

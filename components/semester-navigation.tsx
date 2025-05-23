@@ -10,9 +10,15 @@ interface SemesterNavigationProps {
   columns: ColumnType[]
   onSelectSemester?: (columnId: string) => void
   allTasks: Task[] // Todos los cursos disponibles
+  onTaskClick: (task: Task) => void // Añadir esta prop para manejar el clic en un curso
 }
 
-export default function SemesterNavigation({ columns, onSelectSemester, allTasks }: SemesterNavigationProps) {
+export default function SemesterNavigation({
+  columns,
+  onSelectSemester,
+  allTasks,
+  onTaskClick,
+}: SemesterNavigationProps) {
   const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null)
 
   // Agrupar columnas por años (2 columnas por año)
@@ -83,7 +89,12 @@ export default function SemesterNavigation({ columns, onSelectSemester, allTasks
               <div className="flex flex-wrap gap-4 justify-center">
                 {semesterCourses.map((course) => (
                   <div key={course.id} className="w-[200px]">
-                    <TaskCard task={course} onClick={() => {}} onDuplicate={() => {}} className="h-full" />
+                    <TaskCard
+                      task={course}
+                      onClick={() => onTaskClick(course)} // Pasar la función onTaskClick
+                      onDuplicate={() => {}}
+                      className="h-full"
+                    />
                   </div>
                 ))}
               </div>

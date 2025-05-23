@@ -1,8 +1,4 @@
 "use client"
-
-import type React from "react"
-import { Copy } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import type { Task } from "@/types/kanban"
 
@@ -14,11 +10,6 @@ interface TaskCardProps {
 }
 
 export default function TaskCard({ task, onClick, onDuplicate, className = "" }: TaskCardProps) {
-  const handleDuplicate = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    onDuplicate()
-  }
-
   // Usar el color del departamento si está disponible
   const headerStyle = task.color
     ? { backgroundColor: task.color, color: isLightColor(task.color) ? "#000" : "#fff" }
@@ -32,15 +23,6 @@ export default function TaskCard({ task, onClick, onDuplicate, className = "" }:
       {/* Header - Sigla del ramo con color de departamento */}
       <div className="flex justify-between items-center p-1.5" style={headerStyle}>
         <div className="font-mono text-sm font-medium">{task.codigo}</div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={handleDuplicate}
-          title="Duplicar curso"
-        >
-          <Copy className="h-3 w-3" />
-        </Button>
       </div>
 
       {/* Separador entre header y contenido */}

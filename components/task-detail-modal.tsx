@@ -58,9 +58,7 @@ export default function TaskDetailModal({
     onDelete(task.id)
   }
 
-  const handleDuplicateTask = () => {
-    onDuplicate(task)
-  }
+  // Función eliminada ya que no se necesita la duplicación
 
   const handleGenerateTemplate = () => {
     // Aquí iría la lógica para generar la plantilla de notas
