@@ -342,61 +342,121 @@ export default function AppContainer() {
     (taskId: string, sourceColumnId: string, targetColumnId: string, targetIndex: number) => {
       debugLog("Moviendo tarea entre columnas", { taskId, sourceColumnId, targetColumnId, targetIndex })
 
-      const sourceColumn = columns.find((col) => col.id === sourceColumnId)
-      const targetColumn = columns.find((col) => col.id === targetColumnId)
-
-      if (!sourceColumn || !targetColumn) {
-        debugLog("Columna no encontrada", { sourceColumnId, targetColumnId })
-        return
-      }
-
-      const taskToMove = sourceColumn.tasks.find((task) => task.id === taskId)
-      if (!taskToMove) {
-        debugLog("Tarea no encontrada en columna origen", { taskId, sourceColumnId })
-        return
-      }
-
-      // Crear la tarea actualizada
-      const updatedTask = {
-        ...taskToMove,
-        status: targetColumn.title,
-      }
-
-      // Actualizar columnas
       setColumns((prevColumns) => {
-        const newColumns = prevColumns.map((column) => {
-          if (column.id === sourceColumnId) {
-            // Remover de la columna origen
-            return {
-              ...column,
-              tasks: column.tasks.filter((task) => task.id !== taskId),
-            }
-          } else if (column.id === targetColumnId) {
-            // Añadir a la columna destino
-            const newTasks = [...column.tasks]
-            newTasks.splice(targetIndex, 0, updatedTask)
-            return {
-              ...column,
-              tasks: newTasks,
-            }
+        const newColumns = [...prevColumns]
+
+        // Encontrar índices de las columnas
+        const sourceColumnIndex = newColumns.findIndex((col) => col.id === sourceColumnId)
+        const targetColumnIndex = newColumns.findIndex((col) => col.id === targetColumnId)
+
+        if (sourceColumnIndex === -1 || targetColumnIndex === -1) {
+          debugLog("Columna no encontrada", { sourceColumnId, targetColumnId })
+          return prevColumns // Retornar estado anterior si hay error
+        }
+
+        // Encontrar la tarea en la columna origen
+        const sourceColumn = newColumns[sourceColumnIndex]
+        const taskIndex = sourceColumn.tasks.findIndex((task) => task.id === taskId)
+
+        if (taskIndex === -1) {
+          debugLog("Tarea no encontrada en columna origen", { taskId, sourceColumnId })
+          return prevColumns // Retornar estado anterior si hay error
+        }
+
+        // Extraer la tarea
+        const taskToMove = sourceColumn.tasks[taskIndex]
+        const updatedTask = {
+          ...taskToMove,
+          status: newColumns[targetColumnIndex].title,
+        }
+
+        // Caso 1: Movimiento dentro de la misma columna (reordenamiento)
+        if (sourceColumnId === targetColumnId) {
+          const newTasks = [...sourceColumn.tasks]
+
+          // Remover la tarea de su posición actual
+          newTasks.splice(taskIndex, 1)
+
+          // Calcular la nueva posición (ajustar si es necesario)
+          let newIndex = targetIndex
+          if (taskIndex < targetIndex) {
+            newIndex = targetIndex - 1
           }
-          return column
-        })
-        debugLog("Columnas actualizadas para movimiento entre columnas")
+
+          // Asegurar que el índice esté dentro de los límites
+          newIndex = Math.max(0, Math.min(newIndex, newTasks.length))
+
+          // Insertar en la nueva posición
+          newTasks.splice(newIndex, 0, updatedTask)
+
+          newColumns[sourceColumnIndex] = {
+            ...sourceColumn,
+            tasks: newTasks,
+          }
+
+          debugLog("Reordenamiento en misma columna completado", {
+            taskId,
+            oldIndex: taskIndex,
+            newIndex,
+            totalTasks: newTasks.length,
+          })
+        }
+        // Caso 2: Movimiento entre columnas diferentes
+        else {
+          // Remover de la columna origen
+          const newSourceTasks = sourceColumn.tasks.filter((task) => task.id !== taskId)
+          newColumns[sourceColumnIndex] = {
+            ...sourceColumn,
+            tasks: newSourceTasks,
+          }
+
+          // Añadir a la columna destino
+          const targetColumn = newColumns[targetColumnIndex]
+          const newTargetTasks = [...targetColumn.tasks]
+
+          // Asegurar que el índice esté dentro de los límites
+          const safeIndex = Math.max(0, Math.min(targetIndex, newTargetTasks.length))
+          newTargetTasks.splice(safeIndex, 0, updatedTask)
+
+          newColumns[targetColumnIndex] = {
+            ...targetColumn,
+            tasks: newTargetTasks,
+          }
+
+          debugLog("Movimiento entre columnas completado", {
+            taskId,
+            from: sourceColumnId,
+            to: targetColumnId,
+            sourceTasksRemaining: newSourceTasks.length,
+            targetTasksTotal: newTargetTasks.length,
+          })
+        }
+
         return newColumns
       })
 
       // Actualizar tarea seleccionada si es necesario
       if (selectedTask && selectedTask.id === taskId) {
-        setSelectedTask(updatedTask)
+        const targetColumn = columns.find((col) => col.id === targetColumnId)
+        if (targetColumn) {
+          setSelectedTask((prev) => (prev ? { ...prev, status: targetColumn.title } : null))
+        }
       }
 
-      toast({
-        title: "Curso movido",
-        description: `"${taskToMove.nombre}" movido a semestre ${targetColumn.title}`,
-      })
+      // Solo mostrar toast para movimientos entre columnas diferentes
+      if (sourceColumnId !== targetColumnId) {
+        const targetColumn = columns.find((col) => col.id === targetColumnId)
+        const taskToMove = columns.find((col) => col.id === sourceColumnId)?.tasks.find((task) => task.id === taskId)
 
-      debugLog("Tarea movida exitosamente entre columnas", { taskId, from: sourceColumnId, to: targetColumnId })
+        if (targetColumn && taskToMove) {
+          toast({
+            title: "Curso movido",
+            description: `"${taskToMove.nombre}" movido a semestre ${targetColumn.title}`,
+          })
+        }
+      }
+
+      debugLog("Tarea movida exitosamente", { taskId, from: sourceColumnId, to: targetColumnId })
     },
     [columns, selectedTask, toast],
   )
@@ -408,9 +468,15 @@ export default function AppContainer() {
 
       debugLog("Drag end", { destination, source, draggableId })
 
-      // Si no hay destino o se suelta en el mismo lugar, no hacer nada
-      if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
-        debugLog("Drag cancelado - sin destino o mismo lugar")
+      // Si no hay destino, cancelar
+      if (!destination) {
+        debugLog("Drag cancelado - sin destino")
+        return
+      }
+
+      // Si se suelta en el mismo lugar exacto, no hacer nada
+      if (destination.droppableId === source.droppableId && destination.index === source.index) {
+        debugLog("Drag cancelado - mismo lugar exacto")
         return
       }
 
@@ -425,7 +491,7 @@ export default function AppContainer() {
         if (source.droppableId !== "sidebar" && destination.droppableId === "sidebar") {
           moveTaskFromColumnToSidebar(draggableId)
         }
-        // Caso 2: Mover entre columnas
+        // Caso 2: Mover entre columnas (incluyendo reordenamiento en la misma columna)
         else if (source.droppableId !== "sidebar" && destination.droppableId !== "sidebar") {
           moveTaskBetweenColumns(draggableId, source.droppableId, destination.droppableId, destination.index)
         }
@@ -433,7 +499,7 @@ export default function AppContainer() {
         console.error("Error en handleDragEnd:", error)
         toast({
           title: "Error",
-          description: "Ocurrió un error al mover el curso",
+          description: "Ocurrió un error al mover el curso. El curso se mantuvo en su posición original.",
           variant: "destructive",
         })
       }

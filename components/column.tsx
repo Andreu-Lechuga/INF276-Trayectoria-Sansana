@@ -163,11 +163,15 @@ export default function Column({
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className={`mb-2 ${snapshot.isDragging ? "dragging-item" : ""}`}
+                    className={`mb-2 ${snapshot.isDragging ? "dragging-item opacity-80" : ""}`}
                     style={{
                       ...provided.draggableProps.style,
+                      // Asegurar que el elemento arrastrado mantenga su visibilidad
+                      visibility: snapshot.isDragging ? "visible" : "visible",
+                      zIndex: snapshot.isDragging ? 9999 : "auto",
                     }}
                     data-is-dragging={snapshot.isDragging ? "true" : "false"}
+                    data-task-id={task.id}
                   >
                     <div className="relative group">
                       <TaskCard task={task} onClick={() => onTaskClick(task)} onDuplicate={() => {}} />
