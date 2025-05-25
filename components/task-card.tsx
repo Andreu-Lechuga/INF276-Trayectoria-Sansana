@@ -1,5 +1,6 @@
 "use client"
 import { Separator } from "@/components/ui/separator"
+import { Plus } from "lucide-react"
 import type { Task } from "@/types/kanban"
 
 interface TaskCardProps {
@@ -7,9 +8,10 @@ interface TaskCardProps {
   onClick: () => void
   onDuplicate: () => void
   className?: string
+  showHoverPlus?: boolean // Nueva prop para controlar el efecto hover
 }
 
-export default function TaskCard({ task, onClick, onDuplicate, className = "" }: TaskCardProps) {
+export default function TaskCard({ task, onClick, onDuplicate, className = "", showHoverPlus = false }: TaskCardProps) {
   // Usar el color del departamento si está disponible
   const headerStyle = task.color
     ? { backgroundColor: task.color, color: isLightColor(task.color) ? "#000" : "#fff" }
@@ -17,9 +19,18 @@ export default function TaskCard({ task, onClick, onDuplicate, className = "" }:
 
   return (
     <div
-      className={`mb-2 bg-white dark:bg-gray-800 rounded-md shadow-sm border dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer group overflow-hidden ${className}`}
-      onClick={onClick}
+      className={`mb-2 bg-white dark:bg-gray-800 rounded-md shadow-sm border dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer group overflow-hidden relative ${className}`}
+      onClick={onClick} // onClick siempre funciona
     >
+      {/* Hover overlay with plus icon - SOLO para sidebar */}
+      {showHoverPlus && (
+        <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center z-10 pointer-events-none">
+          <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-lg">
+            <Plus className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+          </div>
+        </div>
+      )}
+
       {/* Header - Sigla del ramo con color de departamento */}
       <div className="flex justify-between items-center p-1.5" style={headerStyle}>
         <div className="font-mono text-sm font-medium">{task.codigo}</div>

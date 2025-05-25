@@ -20,6 +20,7 @@ interface KanbanBoardProps {
   selectedTask?: Task | null
   onTaskMoveToSidebar?: (taskId: string) => void
   toggleSidebar?: () => void
+  onStartEditingSemester?: (columnId: string) => void // Nueva prop
 }
 
 export default function KanbanBoard({
@@ -29,6 +30,7 @@ export default function KanbanBoard({
   selectedTask,
   onTaskMoveToSidebar,
   toggleSidebar,
+  onStartEditingSemester,
 }: KanbanBoardProps) {
   const { toast } = useToast()
   const [localSelectedTask, setLocalSelectedTask] = useState<Task | null>(null)
@@ -39,6 +41,11 @@ export default function KanbanBoard({
   // Debug logging
   const debugLog = (message: string, data?: any) => {
     console.log(`[KanbanBoard] ${message}`, data || "")
+  }
+
+  // Función para generar ID de columna basado en el número de semestre
+  const generateColumnId = (semesterNumber: number): string => {
+    return `column-${semesterNumber}`
   }
 
   // Sincronizar tarea seleccionada
@@ -153,12 +160,15 @@ export default function KanbanBoard({
     const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
     const nextIndex = columns.length
     const nextRomanNumeral = romanNumerals[nextIndex] || `${nextIndex + 1}`
+    const nextSemesterNumber = nextIndex + 1
 
     const newColumn: ColumnType = {
-      id: `column-${generateId()}`,
+      id: generateColumnId(nextSemesterNumber), // Usar ID consistente
       title: nextRomanNumeral,
       tasks: [],
     }
+
+    console.log("🆔 Nueva columna manual creada con ID:", newColumn.id)
 
     onColumnsChange([...columns, newColumn])
 
@@ -234,7 +244,9 @@ export default function KanbanBoard({
                 onTaskClick={handleTaskClick}
                 onDeleteColumn={() => deleteColumn(column.id)}
                 onUpdateColumn={updateColumn}
-                toggleSidebar={toggleSidebar || (() => {})}
+                toggleSidebar={
+                  onStartEditingSemester ? () => onStartEditingSemester(column.id) : toggleSidebar || (() => {})
+                } // Usar nueva función
                 onMoveTaskToSidebar={onTaskMoveToSidebar}
               />
             ))}

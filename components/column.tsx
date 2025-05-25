@@ -163,15 +163,11 @@ export default function Column({
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className={`mb-2 ${snapshot.isDragging ? "dragging-item opacity-80" : ""}`}
+                    className={`mb-2 ${snapshot.isDragging ? "dragging-item" : ""}`}
                     style={{
                       ...provided.draggableProps.style,
-                      // Asegurar que el elemento arrastrado mantenga su visibilidad
-                      visibility: snapshot.isDragging ? "visible" : "visible",
-                      zIndex: snapshot.isDragging ? 9999 : "auto",
                     }}
                     data-is-dragging={snapshot.isDragging ? "true" : "false"}
-                    data-task-id={task.id}
                   >
                     <div className="relative group">
                       <TaskCard task={task} onClick={() => onTaskClick(task)} onDuplicate={() => {}} />
@@ -196,13 +192,6 @@ export default function Column({
               </Draggable>
             ))}
             {provided.placeholder}
-
-            {/* Indicador visual cuando está vacía */}
-            {column.tasks.length === 0 && (
-              <div className="flex items-center justify-center h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md">
-                <p className="text-gray-500 dark:text-gray-400 text-sm">Arrastra cursos aquí</p>
-              </div>
-            )}
 
             {isAddingTask ? (
               <div className="mt-2 p-3 bg-white dark:bg-gray-800 rounded-md shadow-sm border dark:border-gray-700">

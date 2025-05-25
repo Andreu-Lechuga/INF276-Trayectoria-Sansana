@@ -56,7 +56,7 @@ export default function AppContainer() {
   }, [])
 
   const { toast } = useToast()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
   const [allTasks, setAllTasks] = useState<Task[]>([])
@@ -69,9 +69,23 @@ export default function AppContainer() {
   const [selectedCarrera, setSelectedCarrera] = useState<{ nombre: string; link: string } | null>(null)
   const [courseFilter, setCourseFilter] = useState<string>("todos")
 
+  // Nuevo estado para el modo de edición
+  const [editingColumnId, setEditingColumnId] = useState<string | null>(null)
+
   // Debug logging
   const debugLog = (message: string, data?: any) => {
     console.log(`[AppContainer] ${message}`, data || "")
+  }
+
+  // Función para convertir número a romano
+  const toRoman = (num: number): string => {
+    const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
+    return romanNumerals[num - 1] || num.toString()
+  }
+
+  // Función para generar ID de columna basado en el número de semestre
+  const generateColumnId = (semesterNumber: number): string => {
+    return `column-${semesterNumber}`
   }
 
   // Cargar los colores de departamentos
@@ -152,15 +166,15 @@ export default function AppContainer() {
       setAllTasks(tasks)
       setSidebarTasks(remainingTasks)
 
-      // Inicializar columnas con cursos del primer semestre
+      // Inicializar columnas con cursos del primer semestre usando IDs consistentes
       const initialColumns: ColumnType[] = [
         {
-          id: "column-1",
+          id: generateColumnId(1), // "column-1"
           title: "I",
           tasks: primerSemestreTasks,
         },
         {
-          id: "column-2",
+          id: generateColumnId(2), // "column-2"
           title: "II",
           tasks: [],
         },
@@ -338,127 +352,288 @@ export default function AppContainer() {
   )
 
   // Función para mover tareas entre columnas
+  // En la función moveTaskBetweenColumns, reemplazar toda la lógica con esta versión más robusta:
+
   const moveTaskBetweenColumns = useCallback(
     (taskId: string, sourceColumnId: string, targetColumnId: string, targetIndex: number) => {
       debugLog("Moviendo tarea entre columnas", { taskId, sourceColumnId, targetColumnId, targetIndex })
 
+      const sourceColumn = columns.find((col) => col.id === sourceColumnId)
+      const targetColumn = columns.find((col) => col.id === targetColumnId)
+
+      if (!sourceColumn || !targetColumn) {
+        debugLog("Columna no encontrada", { sourceColumnId, targetColumnId })
+        return
+      }
+
+      const taskToMove = sourceColumn.tasks.find((task) => task.id === taskId)
+      if (!taskToMove) {
+        debugLog("Tarea no encontrada en columna origen", { taskId, sourceColumnId })
+        return
+      }
+
+      // Crear la tarea actualizada
+      const updatedTask = {
+        ...taskToMove,
+        status: targetColumn.title,
+      }
+
+      // Actualizar columnas de forma más segura
       setColumns((prevColumns) => {
-        const newColumns = [...prevColumns]
-
-        // Encontrar índices de las columnas
-        const sourceColumnIndex = newColumns.findIndex((col) => col.id === sourceColumnId)
-        const targetColumnIndex = newColumns.findIndex((col) => col.id === targetColumnId)
-
-        if (sourceColumnIndex === -1 || targetColumnIndex === -1) {
-          debugLog("Columna no encontrada", { sourceColumnId, targetColumnId })
-          return prevColumns // Retornar estado anterior si hay error
-        }
-
-        // Encontrar la tarea en la columna origen
-        const sourceColumn = newColumns[sourceColumnIndex]
-        const taskIndex = sourceColumn.tasks.findIndex((task) => task.id === taskId)
-
-        if (taskIndex === -1) {
-          debugLog("Tarea no encontrada en columna origen", { taskId, sourceColumnId })
-          return prevColumns // Retornar estado anterior si hay error
-        }
-
-        // Extraer la tarea
-        const taskToMove = sourceColumn.tasks[taskIndex]
-        const updatedTask = {
-          ...taskToMove,
-          status: newColumns[targetColumnIndex].title,
-        }
-
-        // Caso 1: Movimiento dentro de la misma columna (reordenamiento)
+        // Si es la misma columna (reordenamiento)
         if (sourceColumnId === targetColumnId) {
-          const newTasks = [...sourceColumn.tasks]
+          const newColumns = prevColumns.map((column) => {
+            if (column.id === sourceColumnId) {
+              const newTasks = [...column.tasks]
 
-          // Remover la tarea de su posición actual
-          newTasks.splice(taskIndex, 1)
+              // Encontrar el índice actual de la tarea
+              const currentIndex = newTasks.findIndex((task) => task.id === taskId)
+              if (currentIndex === -1) {
+                console.error("❌ Tarea no encontrada en la columna para reordenamiento", {
+                  taskId,
+                  columnId: sourceColumnId,
+                })
+                return column // Retornar sin cambios si no se encuentra la tarea
+              }
 
-          // Calcular la nueva posición (ajustar si es necesario)
-          let newIndex = targetIndex
-          if (taskIndex < targetIndex) {
-            newIndex = targetIndex - 1
-          }
+              // Remover la tarea de su posición actual
+              const [removedTask] = newTasks.splice(currentIndex, 1)
 
-          // Asegurar que el índice esté dentro de los límites
-          newIndex = Math.max(0, Math.min(newIndex, newTasks.length))
+              // Insertar en la nueva posición
+              newTasks.splice(targetIndex, 0, { ...removedTask, status: targetColumn.title })
 
-          // Insertar en la nueva posición
-          newTasks.splice(newIndex, 0, updatedTask)
+              debugLog("Reordenamiento en misma columna", {
+                columnId: sourceColumnId,
+                from: currentIndex,
+                to: targetIndex,
+                tasksCount: newTasks.length,
+              })
 
-          newColumns[sourceColumnIndex] = {
-            ...sourceColumn,
-            tasks: newTasks,
-          }
-
-          debugLog("Reordenamiento en misma columna completado", {
-            taskId,
-            oldIndex: taskIndex,
-            newIndex,
-            totalTasks: newTasks.length,
+              return {
+                ...column,
+                tasks: newTasks,
+              }
+            }
+            return column
           })
-        }
-        // Caso 2: Movimiento entre columnas diferentes
-        else {
-          // Remover de la columna origen
-          const newSourceTasks = sourceColumn.tasks.filter((task) => task.id !== taskId)
-          newColumns[sourceColumnIndex] = {
-            ...sourceColumn,
-            tasks: newSourceTasks,
-          }
 
-          // Añadir a la columna destino
-          const targetColumn = newColumns[targetColumnIndex]
-          const newTargetTasks = [...targetColumn.tasks]
-
-          // Asegurar que el índice esté dentro de los límites
-          const safeIndex = Math.max(0, Math.min(targetIndex, newTargetTasks.length))
-          newTargetTasks.splice(safeIndex, 0, updatedTask)
-
-          newColumns[targetColumnIndex] = {
-            ...targetColumn,
-            tasks: newTargetTasks,
-          }
-
-          debugLog("Movimiento entre columnas completado", {
-            taskId,
-            from: sourceColumnId,
-            to: targetColumnId,
-            sourceTasksRemaining: newSourceTasks.length,
-            targetTasksTotal: newTargetTasks.length,
+          return newColumns
+        } else {
+          // Diferentes columnas - lógica original
+          const newColumns = prevColumns.map((column) => {
+            if (column.id === sourceColumnId) {
+              // Remover de la columna origen
+              const newTasks = column.tasks.filter((task) => task.id !== taskId)
+              debugLog("Tareas después de remover", { columnId: sourceColumnId, tasksCount: newTasks.length })
+              return {
+                ...column,
+                tasks: newTasks,
+              }
+            } else if (column.id === targetColumnId) {
+              // Añadir a la columna destino
+              const newTasks = [...column.tasks]
+              newTasks.splice(targetIndex, 0, updatedTask)
+              debugLog("Tareas después de añadir", { columnId: targetColumnId, tasksCount: newTasks.length })
+              return {
+                ...column,
+                tasks: newTasks,
+              }
+            }
+            return column
           })
-        }
 
-        return newColumns
+          return newColumns
+        }
       })
 
       // Actualizar tarea seleccionada si es necesario
       if (selectedTask && selectedTask.id === taskId) {
-        const targetColumn = columns.find((col) => col.id === targetColumnId)
-        if (targetColumn) {
-          setSelectedTask((prev) => (prev ? { ...prev, status: targetColumn.title } : null))
-        }
+        setSelectedTask(updatedTask)
       }
 
-      // Solo mostrar toast para movimientos entre columnas diferentes
+      // Solo mostrar toast si es movimiento entre diferentes columnas
       if (sourceColumnId !== targetColumnId) {
-        const targetColumn = columns.find((col) => col.id === targetColumnId)
-        const taskToMove = columns.find((col) => col.id === sourceColumnId)?.tasks.find((task) => task.id === taskId)
-
-        if (targetColumn && taskToMove) {
-          toast({
-            title: "Curso movido",
-            description: `"${taskToMove.nombre}" movido a semestre ${targetColumn.title}`,
-          })
-        }
+        toast({
+          title: "Curso movido",
+          description: `"${taskToMove.nombre}" movido a semestre ${targetColumn.title}`,
+        })
       }
 
-      debugLog("Tarea movida exitosamente", { taskId, from: sourceColumnId, to: targetColumnId })
+      debugLog("Tarea movida exitosamente entre columnas", { taskId, from: sourceColumnId, to: targetColumnId })
     },
     [columns, selectedTask, toast],
+  )
+
+  // Función para añadir curso desde sidebar al semestre correspondiente
+  const addCourseToSemester = useCallback(
+    (taskId: string) => {
+      console.log("🔥 addCourseToSemester llamada con taskId:", taskId)
+      console.log("🎯 Modo de edición activo:", editingColumnId ? "SÍ" : "NO")
+      debugLog("Añadiendo curso al semestre correspondiente", { taskId, editingColumnId })
+
+      // Encontrar la tarea en el sidebar
+      const taskToMove = sidebarTasks.find((task) => task.id === taskId)
+      if (!taskToMove) {
+        console.log("❌ Tarea no encontrada en sidebar:", taskId)
+        debugLog("Tarea no encontrada en sidebar", { taskId })
+        return
+      }
+
+      console.log("✅ Tarea encontrada:", taskToMove.nombre, "Semestre original:", taskToMove.semestre)
+
+      let targetColumn: ColumnType | null = null
+      let targetSemester: number
+      let targetColumnTitle: string
+
+      // Si estamos en modo de edición, añadir al semestre que se está editando
+      if (editingColumnId) {
+        console.log("📝 Modo edición: añadiendo al semestre en edición")
+        targetColumn = columns.find((col) => col.id === editingColumnId)
+
+        if (!targetColumn) {
+          console.log("❌ Columna en edición no encontrada:", editingColumnId)
+          debugLog("Columna en edición no encontrada", { editingColumnId })
+          toast({
+            title: "Error",
+            description: "No se pudo encontrar el semestre en edición",
+            variant: "destructive",
+          })
+          return
+        }
+
+        targetColumnTitle = targetColumn.title
+        console.log("🎯 Añadiendo al semestre en edición:", targetColumnTitle)
+      } else {
+        // Modo normal: añadir al semestre natural del curso
+        console.log("🔄 Modo normal: añadiendo al semestre natural del curso")
+        targetSemester = taskToMove.semestre
+
+        // Buscar la columna que corresponde a ese semestre
+        const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
+        targetColumnTitle = romanNumerals[targetSemester - 1]
+
+        if (!targetColumnTitle) {
+          console.log("❌ Semestre inválido:", targetSemester)
+          debugLog("Semestre inválido", { targetSemester })
+          toast({
+            title: "Error",
+            description: `Semestre ${targetSemester} no válido`,
+            variant: "destructive",
+          })
+          return
+        }
+
+        console.log("🎯 Buscando columna para semestre:", targetColumnTitle)
+
+        // Encontrar la columna destino
+        targetColumn = columns.find((col) => col.title === targetColumnTitle)
+
+        if (!targetColumn) {
+          console.log("🏗️ Creando nueva columna para semestre:", targetColumnTitle)
+          debugLog("Columna destino no encontrada, creando nueva", { targetColumnTitle, targetSemester })
+
+          // Si la columna no existe, crearla automáticamente con ID consistente
+          const newColumn: ColumnType = {
+            id: generateColumnId(targetSemester), // Usar ID consistente basado en el semestre
+            title: targetColumnTitle,
+            tasks: [],
+          }
+
+          console.log("🆔 Nueva columna creada con ID:", newColumn.id)
+
+          // Crear la tarea actualizada
+          const updatedTask = {
+            ...taskToMove,
+            status: targetColumnTitle,
+          }
+
+          // Actualizar el estado de forma atómica
+          setSidebarTasks((prevSidebarTasks) => {
+            const newSidebarTasks = prevSidebarTasks.filter((task) => task.id !== taskId)
+            console.log("📤 Sidebar actualizado, cursos restantes:", newSidebarTasks.length)
+            return newSidebarTasks
+          })
+
+          setColumns((prevColumns) => {
+            // Insertar la nueva columna en la posición correcta
+            const newColumns = [...prevColumns]
+
+            // Encontrar la posición correcta para insertar
+            let insertIndex = newColumns.length
+            for (let i = 0; i < newColumns.length; i++) {
+              const columnSemester = romanNumerals.indexOf(newColumns[i].title) + 1
+              if (columnSemester > targetSemester) {
+                insertIndex = i
+                break
+              }
+            }
+
+            // Insertar la nueva columna con la tarea
+            const columnWithTask = {
+              ...newColumn,
+              tasks: [updatedTask],
+            }
+            newColumns.splice(insertIndex, 0, columnWithTask)
+
+            console.log("🏗️ Nueva columna creada y tarea añadida")
+            return newColumns
+          })
+
+          toast({
+            title: "Semestre creado",
+            description: `Semestre ${targetColumnTitle} creado y curso "${taskToMove.nombre}" añadido`,
+          })
+
+          console.log("✅ Proceso completado - nueva columna creada")
+          return
+        }
+      }
+
+      console.log("📍 Columna encontrada:", targetColumn.title, "ID:", targetColumn.id)
+
+      // Crear la tarea actualizada con el nuevo status
+      const updatedTask = {
+        ...taskToMove,
+        status: targetColumn.title,
+      }
+
+      // Actualizar el estado de forma atómica
+      setSidebarTasks((prevSidebarTasks) => {
+        const newSidebarTasks = prevSidebarTasks.filter((task) => task.id !== taskId)
+        console.log("📤 Sidebar actualizado, cursos restantes:", newSidebarTasks.length)
+        debugLog("Sidebar actualizado", { removedTaskId: taskId, remainingTasks: newSidebarTasks.length })
+        return newSidebarTasks
+      })
+
+      setColumns((prevColumns) => {
+        const newColumns = prevColumns.map((column) => {
+          if (column.id === targetColumn!.id) {
+            const newTasks = [...column.tasks, updatedTask] // Añadir al final
+            console.log("📥 Columna actualizada, cursos totales:", newTasks.length)
+            debugLog("Columna actualizada", { columnId: targetColumn!.id, newTasksCount: newTasks.length })
+            return {
+              ...column,
+              tasks: newTasks,
+            }
+          }
+          return column
+        })
+        return newColumns
+      })
+
+      toast({
+        title: "Curso añadido",
+        description: `"${taskToMove.nombre}" añadido al semestre ${targetColumn.title}`,
+      })
+
+      console.log("✅ Proceso completado exitosamente")
+      debugLog("Tarea añadida exitosamente al semestre correspondiente", {
+        taskId,
+        to: targetColumn.id,
+        editingMode: !!editingColumnId,
+      })
+    },
+    [sidebarTasks, columns, toast, editingColumnId], // Añadir editingColumnId como dependencia
   )
 
   // Manejar drag and drop global
@@ -474,9 +649,9 @@ export default function AppContainer() {
         return
       }
 
-      // Si se suelta en el mismo lugar exacto, no hacer nada
+      // Si se suelta en el mismo lugar, no hacer nada
       if (destination.droppableId === source.droppableId && destination.index === source.index) {
-        debugLog("Drag cancelado - mismo lugar exacto")
+        debugLog("Drag cancelado - mismo lugar")
         return
       }
 
@@ -499,7 +674,7 @@ export default function AppContainer() {
         console.error("Error en handleDragEnd:", error)
         toast({
           title: "Error",
-          description: "Ocurrió un error al mover el curso. El curso se mantuvo en su posición original.",
+          description: "Ocurrió un error al mover el curso",
           variant: "destructive",
         })
       }
@@ -511,11 +686,32 @@ export default function AppContainer() {
     setIsSidebarOpen(!isSidebarOpen)
   }
 
+  // Función para iniciar edición de semestre
+  const startEditingSemester = useCallback((columnId: string) => {
+    debugLog("Iniciando edición de semestre", { columnId })
+    setEditingColumnId(columnId)
+    setIsSidebarOpen(true)
+  }, [])
+
+  // Función para terminar edición de semestre
+  const finishEditingSemester = useCallback(() => {
+    debugLog("Terminando edición de semestre", { editingColumnId })
+    setEditingColumnId(null)
+    setIsSidebarOpen(false)
+  }, [editingColumnId])
+
   // Función para actualizar las columnas desde KanbanBoard
   const handleColumnsUpdate = useCallback((updatedColumns: ColumnType[]) => {
     debugLog("Actualizando columnas desde KanbanBoard", { columnsCount: updatedColumns.length })
     setColumns(updatedColumns)
   }, [])
+
+  // Obtener el título del semestre en edición
+  const getEditingSemesterTitle = () => {
+    if (!editingColumnId) return ""
+    const column = columns.find((col) => col.id === editingColumnId)
+    return column ? column.title : ""
+  }
 
   if (!selectedCarrera) {
     return (
@@ -559,7 +755,23 @@ export default function AppContainer() {
             <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
               <X className="h-5 w-5" />
             </Button>
-            <div className="flex-1 text-right">Cursos ({filteredTasks.length})</div>
+
+            {/* Nuevo header del sidebar */}
+            {editingColumnId ? (
+              <div className="flex items-center justify-between w-full">
+                <span className="text-sm font-medium dark:text-gray-200">Semestre: {getEditingSemesterTitle()}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={finishEditingSemester}
+                  className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                >
+                  Terminar
+                </Button>
+              </div>
+            ) : (
+              <div className="flex-1 text-right">Cursos ({filteredTasks.length})</div>
+            )}
           </div>
 
           {/* Search bar at the top */}
@@ -627,9 +839,13 @@ export default function AppContainer() {
                       >
                         <TaskCard
                           task={task}
-                          onClick={() => setSelectedTask(task)}
+                          onClick={() => {
+                            console.log("🖱️ Click en TaskCard, taskId:", task.id)
+                            addCourseToSemester(task.id)
+                          }}
                           onDuplicate={() => {}}
                           className="mb-2"
+                          showHoverPlus={true}
                         />
                       </div>
                     ))}
@@ -709,6 +925,7 @@ export default function AppContainer() {
                 selectedTask={selectedTask}
                 onTaskMoveToSidebar={moveTaskFromColumnToSidebar}
                 toggleSidebar={() => setIsSidebarOpen(true)}
+                onStartEditingSemester={startEditingSemester} // Nueva prop
               />
             )}
           </main>
