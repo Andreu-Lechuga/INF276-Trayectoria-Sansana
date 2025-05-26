@@ -21,7 +21,9 @@ interface KanbanBoardProps {
   onTaskMoveToSidebar?: (taskId: string) => void
   toggleSidebar?: () => void
   onStartEditingSemester?: (columnId: string) => void
-  draggedTaskSemestre?: number | null // Nueva prop
+  draggedTaskSemestre?: number | null
+  editingColumnId?: string | null
+  allTasks?: Task[] // Añadir esta prop
 }
 
 export default function KanbanBoard({
@@ -33,6 +35,8 @@ export default function KanbanBoard({
   toggleSidebar,
   onStartEditingSemester,
   draggedTaskSemestre,
+  editingColumnId,
+  allTasks = [], // Añadir esta prop con valor por defecto
 }: KanbanBoardProps) {
   const { toast } = useToast()
   const [localSelectedTask, setLocalSelectedTask] = useState<Task | null>(null)
@@ -251,6 +255,8 @@ export default function KanbanBoard({
                 }
                 onMoveTaskToSidebar={onTaskMoveToSidebar}
                 draggedTaskSemestre={draggedTaskSemestre}
+                editingColumnId={editingColumnId}
+                allTasks={allTasks} // Pasar allTasks
               />
             ))}
           </YearGroup>

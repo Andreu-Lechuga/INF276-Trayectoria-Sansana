@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Droppable, Draggable } from "@hello-pangea/dnd"
-import { MoreHorizontal, Trash2, Edit, Palette, ArrowLeft } from "lucide-react"
+import { MoreHorizontal, Trash2, Edit, Palette } from "lucide-react"
 import TaskCard from "./task-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,7 +31,9 @@ interface ColumnProps {
   onUpdateColumn: (columnId: string, updates: Partial<ColumnType>) => void
   toggleSidebar: () => void
   onMoveTaskToSidebar?: (taskId: string) => void
-  draggedTaskSemestre?: number | null // Nueva prop para recibir el semestre del elemento arrastrado
+  draggedTaskSemestre?: number | null
+  editingColumnId?: string | null
+  allTasks?: Task[] // Añadir esta prop
 }
 
 export default function Column({
@@ -43,10 +45,15 @@ export default function Column({
   toggleSidebar,
   onMoveTaskToSidebar,
   draggedTaskSemestre,
+  editingColumnId,
+  allTasks = [], // Añadir esta prop con valor por defecto
 }: ColumnProps) {
   const [isAddingTask, setIsAddingTask] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState("")
   const [newTaskDescription, setNewTaskDescription] = useState("")
+
+  // Añadir después de las declaraciones de estado
+  const isEditingThisColumn = editingColumnId === column.id
 
   const handleAddTask = () => {
     if (!newTaskTitle.trim()) return
@@ -199,22 +206,14 @@ export default function Column({
                       data-is-dragging={snapshot.isDragging ? "true" : "false"}
                     >
                       <div className="relative group">
-                        <TaskCard task={task} onClick={() => onTaskClick(task)} onDuplicate={() => {}} />
-                        {/* Botón para devolver al sidebar */}
-                        {onMoveTaskToSidebar && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-gray-800 shadow-sm"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleMoveToSidebar(task.id)
-                            }}
-                            title="Devolver a cursos disponibles"
-                          >
-                            <ArrowLeft className="h-3 w-3" />
-                          </Button>
-                        )}
+                        <TaskCard
+                          task={task}
+                          onClick={() => onTaskClick(task)}
+                          onDuplicate={() => {}}
+                          editingMode={isEditingThisColumn}
+                          onRemove={isEditingThisColumn ? () => handleMoveToSidebar(task.id) : undefined}
+                          allTasks={allTasks} // Pasar allTasks
+                        />
                       </div>
                     </div>
                   )}

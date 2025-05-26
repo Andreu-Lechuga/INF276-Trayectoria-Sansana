@@ -925,6 +925,7 @@ export default function AppContainer() {
                           onDuplicate={() => {}}
                           className="mb-2"
                           showHoverPlus={true}
+                          allTasks={allTasks} // Pasar allTasks
                         />
                       </div>
                     ))}
@@ -1006,6 +1007,8 @@ export default function AppContainer() {
                 toggleSidebar={() => setIsSidebarOpen(true)}
                 onStartEditingSemester={startEditingSemester}
                 draggedTaskSemestre={draggedTaskSemestre}
+                editingColumnId={editingColumnId}
+                allTasks={allTasks} // Pasar allTasks
               />
             )}
           </main>
