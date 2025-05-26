@@ -119,9 +119,11 @@ export default function TaskCard({
       {/* Separador entre contenido y footer */}
       <Separator className="w-full bg-gray-200 dark:bg-gray-700" />
 
-      {/* Footer - Solo créditos (sin departamento) */}
-      <div className="p-1.5 bg-gray-50 dark:bg-gray-750 flex justify-end items-center text-xs text-gray-500 dark:text-gray-400">
-        {task.creditos > 0 && <span>{task.creditos} cr.</span>}
+      {/* Footer - Container cuadrado para estado aprobado/reprobado */}
+      <div className="p-1.5 bg-gray-50 dark:bg-gray-750 flex justify-end items-center">
+        <div className="w-4 h-4 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+          {/* Contenido del container se definirá más adelante */}
+        </div>
       </div>
     </div>
   )

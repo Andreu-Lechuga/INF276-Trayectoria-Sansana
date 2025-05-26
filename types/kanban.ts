@@ -17,6 +17,7 @@ export interface Task {
   prerrequisitos: number[] // Cambiado de string[] a number[]
   periodo: string
   semestre: number
+  aprobado?: boolean // Nuevo campo para estado aprobado/reprobado
   cursoId?: number // Nuevo campo para el ID numérico del curso
 }
 
