@@ -58,8 +58,6 @@ export default function TaskDetailModal({
     onDelete(task.id)
   }
 
-  // Función eliminada ya que no se necesita la duplicación
-
   const handleGenerateTemplate = () => {
     // Aquí iría la lógica para generar la plantilla de notas
     console.log("Generando plantilla de notas para:", task.nombre)
@@ -95,6 +93,54 @@ export default function TaskDetailModal({
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-4 text-center">
               Crea una plantilla para registrar y calcular tus notas en este curso
             </p>
+          </div>
+
+          {/* Toggle Aprobado/En Curso/Reprobado completamente re-implementado */}
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+              <button
+                onClick={() => {
+                  const updatedTask = { ...editedTask, aprobado: true }
+                  setEditedTask(updatedTask)
+                  onUpdate(updatedTask)
+                }}
+                className={`px-4 py-2 rounded-md font-medium text-sm transition-all duration-300 ease-in-out ${
+                  editedTask.aprobado === true
+                    ? "bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-100"
+                    : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                }`}
+              >
+                Aprobado
+              </button>
+              <button
+                onClick={() => {
+                  const updatedTask = { ...editedTask, aprobado: undefined }
+                  setEditedTask(updatedTask)
+                  onUpdate(updatedTask)
+                }}
+                className={`px-4 py-2 rounded-md font-medium text-sm transition-all duration-300 ease-in-out ${
+                  editedTask.aprobado === undefined
+                    ? "bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-100"
+                    : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                }`}
+              >
+                En&nbsp;Curso
+              </button>
+              <button
+                onClick={() => {
+                  const updatedTask = { ...editedTask, aprobado: false }
+                  setEditedTask(updatedTask)
+                  onUpdate(updatedTask)
+                }}
+                className={`px-4 py-2 rounded-md font-medium text-sm transition-all duration-300 ease-in-out ${
+                  editedTask.aprobado === false
+                    ? "bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-100"
+                    : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                }`}
+              >
+                Reprobado
+              </button>
+            </div>
           </div>
 
           {/* Información resumida - versión más compacta */}
