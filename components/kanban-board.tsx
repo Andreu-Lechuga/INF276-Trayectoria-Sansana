@@ -7,10 +7,8 @@ import TaskDetailModal from "./task-detail-modal"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import type { Task, Column as ColumnType, Rule } from "@/types/kanban"
-import { generateId } from "@/lib/utils"
+import type { Task, Column as ColumnType } from "@/types/kanban"
 import YearGroup from "./year-group"
-import DebugBoard from "./debug-board"
 import SemesterNavigation from "./semester-navigation"
 
 interface KanbanBoardProps {
@@ -23,7 +21,7 @@ interface KanbanBoardProps {
   onStartEditingSemester?: (columnId: string) => void
   draggedTaskSemestre?: number | null
   editingColumnId?: string | null
-  allTasks?: Task[] // Añadir esta prop
+  allTasks?: Task[]
 }
 
 export default function KanbanBoard({
@@ -36,13 +34,11 @@ export default function KanbanBoard({
   onStartEditingSemester,
   draggedTaskSemestre,
   editingColumnId,
-  allTasks = [], // Añadir esta prop con valor por defecto
+  allTasks = [],
 }: KanbanBoardProps) {
   const { toast } = useToast()
   const [localSelectedTask, setLocalSelectedTask] = useState<Task | null>(null)
-  const [rules, setRules] = useState<Rule[]>([])
   const [activeTab, setActiveTab] = useState("board")
-  const [debug, setDebug] = useState(true)
 
   // Debug logging
   const debugLog = (message: string, data?: any) => {
@@ -60,25 +56,6 @@ export default function KanbanBoard({
       setLocalSelectedTask(selectedTask)
     }
   }, [selectedTask])
-
-  // Inicializar reglas de automatización
-  useEffect(() => {
-    setRules([
-      {
-        id: `rule-${generateId()}`,
-        name: "Move overdue tasks to II",
-        condition: {
-          type: "due-date",
-          operator: "is-overdue",
-        },
-        action: {
-          type: "move-to-column",
-          targetColumnId: "column-2",
-        },
-        enabled: false, // Deshabilitado por defecto
-      },
-    ])
-  }, [])
 
   const getAllTasks = useCallback(() => {
     return columns.flatMap((column) => column.tasks.map((task) => ({ ...task })))
@@ -169,7 +146,7 @@ export default function KanbanBoard({
     const nextSemesterNumber = nextIndex + 1
 
     const newColumn: ColumnType = {
-      id: generateColumnId(nextSemesterNumber), // Usar ID consistente
+      id: generateColumnId(nextSemesterNumber),
       title: nextRomanNumeral,
       tasks: [],
     }
@@ -256,7 +233,7 @@ export default function KanbanBoard({
                 onMoveTaskToSidebar={onTaskMoveToSidebar}
                 draggedTaskSemestre={draggedTaskSemestre}
                 editingColumnId={editingColumnId}
-                allTasks={allTasks} // Pasar allTasks
+                allTasks={allTasks}
               />
             ))}
           </YearGroup>
@@ -326,8 +303,6 @@ export default function KanbanBoard({
           columns={columns}
         />
       )}
-
-      {debug && <DebugBoard initialTasks={getAllTasks()} columns={columns} />}
     </div>
   )
 }
