@@ -31,6 +31,7 @@ interface ColumnProps {
   onUpdateColumn: (columnId: string, updates: Partial<ColumnType>) => void
   toggleSidebar: () => void
   onMoveTaskToSidebar?: (taskId: string) => void
+  draggedTaskSemestre?: number | null // Nueva prop para recibir el semestre del elemento arrastrado
 }
 
 export default function Column({
@@ -41,6 +42,7 @@ export default function Column({
   onUpdateColumn,
   toggleSidebar,
   onMoveTaskToSidebar,
+  draggedTaskSemestre,
 }: ColumnProps) {
   const [isAddingTask, setIsAddingTask] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState("")
@@ -147,100 +149,128 @@ export default function Column({
       </div>
 
       <Droppable droppableId={column.id}>
-        {(provided, snapshot) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className={`flex-1 p-2 overflow-y-auto min-h-[200px] ${
-              snapshot.isDraggingOver ? "bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-300 dark:ring-blue-600" : ""
-            }`}
-            data-is-droppable="true"
-          >
-            {column.tasks.map((task, index) => (
-              <Draggable key={task.id} draggableId={task.id} index={index}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
-                    className={`mb-2 ${snapshot.isDragging ? "dragging-item" : ""}`}
-                    style={{
-                      ...provided.draggableProps.style,
-                    }}
-                    data-is-dragging={snapshot.isDragging ? "true" : "false"}
-                  >
-                    <div className="relative group">
-                      <TaskCard task={task} onClick={() => onTaskClick(task)} onDuplicate={() => {}} />
-                      {/* Botón para devolver al sidebar */}
-                      {onMoveTaskToSidebar && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-gray-800 shadow-sm"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleMoveToSidebar(task.id)
-                          }}
-                          title="Devolver a cursos disponibles"
-                        >
-                          <ArrowLeft className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </Draggable>
-            ))}
-            {provided.placeholder}
+        {(provided, snapshot) => {
+          // Determinar el semestre de la columna basado en su título
+          const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
+          const columnSemestre = romanNumerals.indexOf(column.title) + 1
 
-            {isAddingTask ? (
-              <div className="mt-2 p-3 bg-white dark:bg-gray-800 rounded-md shadow-sm border dark:border-gray-700">
-                <Label htmlFor="task-title" className="dark:text-gray-200">
-                  Título de la tarea
-                </Label>
-                <Input
-                  id="task-title"
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  placeholder="Ingresa el título de la tarea"
-                  className="mb-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                />
-                <Label htmlFor="task-description" className="dark:text-gray-200">
-                  Descripción (opcional)
-                </Label>
-                <Textarea
-                  id="task-description"
-                  value={newTaskDescription}
-                  onChange={(e) => setNewTaskDescription(e.target.value)}
-                  placeholder="Ingresa la descripción de la tarea"
-                  className="mb-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                  rows={3}
-                />
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleAddTask}>
-                    Añadir
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setIsAddingTask(false)}
-                    className="dark:border-gray-600 dark:text-gray-200"
-                  >
-                    Cancelar
-                  </Button>
+          // Determinar si el curso pertenece a este semestre
+          const belongsToSemester = draggedTaskSemestre === columnSemestre
+
+          // Aplicar estilos según si pertenece o no al semestre
+          let dragOverStyles = ""
+          if (snapshot.isDraggingOver && draggedTaskSemestre !== null) {
+            if (belongsToSemester) {
+              // Animación azulada para cursos que pertenecen al semestre
+              dragOverStyles = "bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-300 dark:ring-blue-600"
+            } else {
+              // Animación rojiza para cursos que NO pertenecen al semestre
+              dragOverStyles = "bg-red-50 dark:bg-red-900/20 ring-2 ring-red-300 dark:ring-red-600"
+            }
+          }
+
+          console.log("🎨 Column render:", {
+            columnTitle: column.title,
+            columnSemestre,
+            draggedTaskSemestre,
+            belongsToSemester,
+            isDraggingOver: snapshot.isDraggingOver,
+            dragOverStyles,
+          })
+
+          return (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className={`flex-1 p-2 overflow-y-auto min-h-[200px] ${dragOverStyles}`}
+              data-is-droppable="true"
+            >
+              {column.tasks.map((task, index) => (
+                <Draggable key={task.id} draggableId={task.id} index={index}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      className={`mb-2 ${snapshot.isDragging ? "dragging-item" : ""}`}
+                      style={{
+                        ...provided.draggableProps.style,
+                      }}
+                      data-is-dragging={snapshot.isDragging ? "true" : "false"}
+                    >
+                      <div className="relative group">
+                        <TaskCard task={task} onClick={() => onTaskClick(task)} onDuplicate={() => {}} />
+                        {/* Botón para devolver al sidebar */}
+                        {onMoveTaskToSidebar && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-gray-800 shadow-sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleMoveToSidebar(task.id)
+                            }}
+                            title="Devolver a cursos disponibles"
+                          >
+                            <ArrowLeft className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+
+              {isAddingTask ? (
+                <div className="mt-2 p-3 bg-white dark:bg-gray-800 rounded-md shadow-sm border dark:border-gray-700">
+                  <Label htmlFor="task-title" className="dark:text-gray-200">
+                    Título de la tarea
+                  </Label>
+                  <Input
+                    id="task-title"
+                    value={newTaskTitle}
+                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                    placeholder="Ingresa el título de la tarea"
+                    className="mb-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                  />
+                  <Label htmlFor="task-description" className="dark:text-gray-200">
+                    Descripción (opcional)
+                  </Label>
+                  <Textarea
+                    id="task-description"
+                    value={newTaskDescription}
+                    onChange={(e) => setNewTaskDescription(e.target.value)}
+                    placeholder="Ingresa la descripción de la tarea"
+                    className="mb-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                    rows={3}
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleAddTask}>
+                      Añadir
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsAddingTask(false)}
+                      className="dark:border-gray-600 dark:text-gray-200"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <Button
-                variant="ghost"
-                className="w-full mt-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 justify-start"
-                onClick={toggleSidebar}
-              >
-                <Edit className="mr-2 h-4 w-4" /> Editar Semestre
-              </Button>
-            )}
-          </div>
-        )}
+              ) : (
+                <Button
+                  variant="ghost"
+                  className="w-full mt-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 justify-start"
+                  onClick={toggleSidebar}
+                >
+                  <Edit className="mr-2 h-4 w-4" /> Editar Semestre
+                </Button>
+              )}
+            </div>
+          )
+        }}
       </Droppable>
     </div>
   )

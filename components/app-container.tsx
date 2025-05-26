@@ -72,6 +72,9 @@ export default function AppContainer() {
   // Nuevo estado para el modo de edición
   const [editingColumnId, setEditingColumnId] = useState<string | null>(null)
 
+  // Estado para el drag and drop
+  const [draggedTaskSemestre, setDraggedTaskSemestre] = useState<number | null>(null)
+
   // Debug logging
   const debugLog = (message: string, data?: any) => {
     console.log(`[AppContainer] ${message}`, data || "")
@@ -636,12 +639,33 @@ export default function AppContainer() {
     [sidebarTasks, columns, toast, editingColumnId], // Añadir editingColumnId como dependencia
   )
 
+  // Función para encontrar una tarea por ID en todas las fuentes
+  const findTaskById = useCallback(
+    (taskId: string): Task | null => {
+      // Buscar en sidebar
+      const sidebarTask = sidebarTasks.find((task) => task.id === taskId)
+      if (sidebarTask) return sidebarTask
+
+      // Buscar en columnas
+      for (const column of columns) {
+        const columnTask = column.tasks.find((task) => task.id === taskId)
+        if (columnTask) return columnTask
+      }
+
+      return null
+    },
+    [sidebarTasks, columns],
+  )
+
   // Manejar drag and drop global
   const handleDragEnd = useCallback(
     (result: DropResult) => {
       const { destination, source, draggableId } = result
 
       debugLog("Drag end", { destination, source, draggableId })
+
+      // Limpiar el estado de drag
+      setDraggedTaskSemestre(null)
 
       // Si no hay destino, cancelar
       if (!destination) {
@@ -668,7 +692,50 @@ export default function AppContainer() {
         }
         // Caso 2: Mover entre columnas (incluyendo reordenamiento en la misma columna)
         else if (source.droppableId !== "sidebar" && destination.droppableId !== "sidebar") {
-          moveTaskBetweenColumns(draggableId, source.droppableId, destination.droppableId, destination.index)
+          // Si es la misma columna, permitir reordenamiento
+          if (source.droppableId === destination.droppableId) {
+            moveTaskBetweenColumns(draggableId, source.droppableId, destination.droppableId, destination.index)
+          } else {
+            // Si son columnas diferentes, verificar que el curso pertenezca al semestre destino
+            const draggedTask = findTaskById(draggableId)
+            if (!draggedTask) {
+              debugLog("Tarea no encontrada para validación", { draggableId })
+              toast({
+                title: "Error",
+                description: "No se pudo encontrar el curso",
+                variant: "destructive",
+              })
+              return
+            }
+
+            // Determinar el semestre de la columna destino
+            const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
+            const targetColumn = columns.find((col) => col.id === destination.droppableId)
+
+            if (!targetColumn) {
+              debugLog("Columna destino no encontrada", { destinationId: destination.droppableId })
+              return
+            }
+
+            const targetColumnSemester = romanNumerals.indexOf(targetColumn.title) + 1
+
+            // Solo permitir el movimiento si el curso pertenece al semestre destino
+            if (draggedTask.semestre === targetColumnSemester) {
+              moveTaskBetweenColumns(draggableId, source.droppableId, destination.droppableId, destination.index)
+            } else {
+              debugLog("Movimiento bloqueado - curso no pertenece al semestre destino", {
+                taskSemester: draggedTask.semestre,
+                targetSemester: targetColumnSemester,
+                taskName: draggedTask.nombre,
+              })
+
+              toast({
+                title: "Movimiento no permitido",
+                description: `El curso "${draggedTask.nombre}" pertenece al semestre ${draggedTask.semestre}, no al semestre ${targetColumn.title}`,
+                variant: "destructive",
+              })
+            }
+          }
         }
       } catch (error) {
         console.error("Error en handleDragEnd:", error)
@@ -679,7 +746,7 @@ export default function AppContainer() {
         })
       }
     },
-    [moveTaskFromColumnToSidebar, moveTaskBetweenColumns, toast],
+    [moveTaskFromColumnToSidebar, moveTaskBetweenColumns, toast, findTaskById, columns],
   )
 
   const toggleSidebar = () => {
@@ -728,6 +795,18 @@ export default function AppContainer() {
     <DragDropContext
       onDragEnd={handleDragEnd}
       onDragStart={(start) => {
+        console.log("🚀 Drag iniciado:", start.draggableId)
+
+        // Encontrar la tarea que se está arrastrando
+        const draggedTask = findTaskById(start.draggableId)
+        if (draggedTask) {
+          console.log("📚 Tarea encontrada:", draggedTask.nombre, "Semestre:", draggedTask.semestre)
+          setDraggedTaskSemestre(draggedTask.semestre)
+        } else {
+          console.log("❌ Tarea no encontrada:", start.draggableId)
+          setDraggedTaskSemestre(null)
+        }
+
         // Añadir una clase al elemento que se está arrastrando para asegurar que permanezca visible
         const draggableElement = document.querySelector(`[data-rbd-draggable-id="${start.draggableId}"]`)
         if (draggableElement) {
@@ -925,7 +1004,8 @@ export default function AppContainer() {
                 selectedTask={selectedTask}
                 onTaskMoveToSidebar={moveTaskFromColumnToSidebar}
                 toggleSidebar={() => setIsSidebarOpen(true)}
-                onStartEditingSemester={startEditingSemester} // Nueva prop
+                onStartEditingSemester={startEditingSemester}
+                draggedTaskSemestre={draggedTaskSemestre}
               />
             )}
           </main>
