@@ -11,6 +11,7 @@ export const cursos = [
     prerrequisitos: [],
     periodo: "A",
     semestre: 1,
+    vtr: 1,
   },
   {
     id: 2,
@@ -23,6 +24,7 @@ export const cursos = [
     prerrequisitos: [],
     periodo: "A",
     semestre: 1,
+    vtr: 1,
   },
   {
     id: 3,
@@ -35,6 +37,7 @@ export const cursos = [
     prerrequisitos: [],
     periodo: "A",
     semestre: 1,
+    vtr: 1,
   },
   {
     id: 4,
@@ -47,6 +50,7 @@ export const cursos = [
     prerrequisitos: [],
     periodo: "A",
     semestre: 1,
+    vtr: 1,
   },
   {
     id: 5,
@@ -59,6 +63,7 @@ export const cursos = [
     prerrequisitos: [],
     periodo: "A",
     semestre: 1,
+    vtr: 1,
   },
   {
     id: 6,
@@ -71,6 +76,7 @@ export const cursos = [
     prerrequisitos: [],
     periodo: "A",
     semestre: 2,
+    vtr: 1,
   },
   {
     id: 7,
@@ -83,6 +89,7 @@ export const cursos = [
     prerrequisitos: [2], // MAT-021
     periodo: "A",
     semestre: 2,
+    vtr: 1,
   },
   {
     id: 8,
@@ -95,6 +102,7 @@ export const cursos = [
     prerrequisitos: [2, 3], // MAT-021, FIS-100
     periodo: "A",
     semestre: 2,
+    vtr: 1,
   },
   {
     id: 9,
@@ -107,6 +115,7 @@ export const cursos = [
     prerrequisitos: [],
     periodo: "A",
     semestre: 2,
+    vtr: 1,
   },
   {
     id: 10,
@@ -119,6 +128,7 @@ export const cursos = [
     prerrequisitos: [],
     periodo: "A",
     semestre: 2,
+    vtr: 1,
   },
   {
     id: 11,
@@ -131,5 +141,6 @@ export const cursos = [
     prerrequisitos: [5], // DEW-100
     periodo: "A",
     semestre: 2,
+    vtr: 1,
   },
 ]
