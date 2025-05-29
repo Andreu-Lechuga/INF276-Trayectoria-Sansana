@@ -1,3 +1,5 @@
+import type { GradeData as GData } from "@/components/grade-calculator"
+
 export interface Task {
   id: string
   title: string
@@ -20,6 +22,7 @@ export interface Task {
   vtr: number // Nuevo campo añadido
   aprobado?: boolean
   cursoId?: number
+  gradeData?: GData // Nuevo campo para almacenar datos de notas
 }
 
 export interface Subtask {
@@ -39,4 +42,13 @@ export interface Column {
   title: string
   tasks: Task[]
   color?: string
+}
+
+export interface GradeData {
+  grades: Record<string, Record<number, string | number>>
+  columnTitles: Record<string, string>
+  intermediateCalculations: Array<{ label: string; value: string | number; formula?: string }>
+  textBoxes?: Array<{ content: string; borderColor: string }>
+  finalGrade: string | number
+  formula?: string
 }
