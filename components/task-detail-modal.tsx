@@ -5,6 +5,7 @@ import { X, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Task, Column } from "@/types/kanban"
+import type { CourseStatus, CourseOperationResult } from "@/types/user-progress"
 import EmbeddedGradeCalculator from "./embedded-grade-calculator"
 import type { GradeData } from "./grade-calculator"
 
@@ -15,6 +16,19 @@ interface TaskDetailModalProps {
   onDelete: (taskId: string) => void
   onDuplicate: (task: Task) => void
   columns: Column[]
+  // Nuevas props para el sistema de progreso
+  userCourseData?: {
+    estado: CourseStatus
+    instanceId: string
+    vtr: number
+  }
+  onMarkAsApproved?: (instanceId: string) => Promise<CourseOperationResult>
+  onMarkAsFailed?: (instanceId: string) => Promise<CourseOperationResult>
+  onMarkAsPending?: (instanceId: string) => Promise<CourseOperationResult>
+  onMarkAsRav?: (instanceId: string) => Promise<CourseOperationResult>
+  isLatestInstance?: (instanceId: string) => boolean
+  ravUsados?: number
+  ravDisponibles?: number
 }
 
 export default function TaskDetailModal({
@@ -24,9 +38,18 @@ export default function TaskDetailModal({
   onDelete,
   onDuplicate,
   columns,
+  userCourseData,
+  onMarkAsApproved,
+  onMarkAsFailed,
+  onMarkAsPending,
+  onMarkAsRav,
+  isLatestInstance,
+  ravUsados,
+  ravDisponibles,
 }: TaskDetailModalProps) {
   const [editedTask, setEditedTask] = useState<Task>({ ...task })
   const [showGradeCalculator, setShowGradeCalculator] = useState(false)
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
 
   // Cerrar el modal al hacer clic fuera de él
@@ -79,6 +102,129 @@ export default function TaskDetailModal({
     alert("Datos de notas guardados correctamente")
   }
 
+  // Función para manejar cambios de estado usando el sistema de progreso
+  const handleStatusChange = async (newStatus: CourseStatus) => {
+    if (!userCourseData?.instanceId) {
+      console.warn('No se encontró instanceId para el curso')
+      // Fallback al sistema anterior si no hay datos del usuario
+      handleLegacyStatusChange(newStatus)
+      return
+    }
+
+    setIsUpdatingStatus(true)
+    
+    try {
+      let result: CourseOperationResult | undefined
+
+      switch (newStatus) {
+        case 'aprobado':
+          if (onMarkAsApproved) {
+            result = await onMarkAsApproved(userCourseData.instanceId)
+          }
+          break
+        case 'reprobado':
+          if (onMarkAsFailed) {
+            result = await onMarkAsFailed(userCourseData.instanceId)
+          }
+          break
+        case 'en-curso':
+          if (onMarkAsPending) {
+            result = await onMarkAsPending(userCourseData.instanceId)
+          }
+          break
+      }
+
+      if (result?.success) {
+        console.log('Estado actualizado exitosamente:', result.message)
+        // El hook useUserProgress se encarga de actualizar la UI automáticamente
+      } else if (result) {
+        console.error('Error al actualizar estado:', result.message)
+        alert(`Error: ${result.message}`)
+      }
+    } catch (error) {
+      console.error('Error al cambiar estado del curso:', error)
+      alert('Error al cambiar el estado del curso')
+    } finally {
+      setIsUpdatingStatus(false)
+    }
+  }
+
+  // Función de fallback para el sistema anterior (sin progreso del usuario)
+  const handleLegacyStatusChange = (newStatus: CourseStatus) => {
+    let aprobadoValue: boolean | undefined
+
+    switch (newStatus) {
+      case 'aprobado':
+        aprobadoValue = true
+        break
+      case 'reprobado':
+        aprobadoValue = false
+        break
+      case 'en-curso':
+        aprobadoValue = undefined
+        break
+    }
+
+    const updatedTask = { ...editedTask, aprobado: aprobadoValue }
+    setEditedTask(updatedTask)
+    onUpdate(updatedTask)
+  }
+
+  // Función para determinar el estado actual basado en los datos del usuario
+  const getCurrentStatus = (): CourseStatus => {
+    if (userCourseData) {
+      return userCourseData.estado
+    }
+    
+    // Si existe el estado directamente en la tarea, usarlo
+    if (editedTask.estado) {
+      return editedTask.estado
+    }
+    
+    // Fallback al sistema anterior solo para casos específicos
+    if (editedTask.aprobado === true) return 'aprobado'
+    
+    // Por defecto, los cursos están en curso (no reprobados)
+    return 'en-curso'
+  }
+
+  const currentStatus = getCurrentStatus()
+
+  // Verificar si es la última instancia para habilitar/deshabilitar botones
+  const isLatest = userCourseData?.instanceId && isLatestInstance 
+    ? isLatestInstance(userCourseData.instanceId) 
+    : true // Si no hay función o datos, permitir cambios (fallback)
+
+  // Verificar si se puede usar RAV
+  const canUseRav = (ravUsados || 0) < (ravDisponibles || 5)
+
+  // Función para manejar el toggle de RAV
+  const handleRavToggle = async () => {
+    if (!userCourseData?.instanceId || !onMarkAsRav) {
+      console.warn('No se encontró instanceId o función onMarkAsRav')
+      return
+    }
+
+    setIsUpdatingStatus(true)
+    
+    try {
+      const result = await onMarkAsRav(userCourseData.instanceId)
+      
+      if (result?.success) {
+        console.log('RAV aplicado exitosamente:', result.message)
+        // El hook useUserProgress se encarga de actualizar la UI automáticamente
+      } else if (result) {
+        console.error('Error al aplicar RAV:', result.message)
+        alert(`Error: ${result.message}`)
+      }
+    } catch (error) {
+      console.error('Error al aplicar RAV:', error)
+      alert('Error al aplicar RAV al curso')
+    } finally {
+      setIsUpdatingStatus(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div
@@ -98,6 +244,17 @@ export default function TaskDetailModal({
             <h3 className="text-xl font-medium text-center mb-6 dark:text-gray-200">
               {editedTask.nombre || editedTask.title}
             </h3>
+
+            {/* Información del VTR si existe */}
+            {userCourseData && userCourseData.vtr > 1 && (
+              <div className="flex justify-center mb-4">
+                <div className="bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg px-4 py-2">
+                  <span className="text-yellow-800 dark:text-yellow-200 text-sm font-medium">
+                    VTR: {userCourseData.vtr} (Veces tomado el ramo)
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Contenedor principal con botón de generar plantilla o calculadora embebida */}
             <div className="mb-8">
@@ -123,52 +280,81 @@ export default function TaskDetailModal({
             </div>
 
             {/* Toggle Aprobado/En Curso/Reprobado - SIEMPRE VISIBLE */}
-            <div className="flex justify-center mb-6">
+            <div className="flex flex-col items-center mb-6">
               <div className="inline-flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                 <button
-                  onClick={() => {
-                    const updatedTask = { ...editedTask, aprobado: true }
-                    setEditedTask(updatedTask)
-                    onUpdate(updatedTask)
-                  }}
-                  className={`px-4 py-2 rounded-md font-medium text-sm transition-all duration-300 ease-in-out ${
-                    editedTask.aprobado === true
+                  onClick={() => handleStatusChange('aprobado')}
+                  disabled={isUpdatingStatus || !isLatest}
+                  className={`px-4 py-2 rounded-md font-medium text-sm transition-all duration-300 ease-in-out disabled:opacity-50 ${
+                    currentStatus === 'aprobado'
                       ? "bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-100"
                       : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                  }`}
+                  } ${!isLatest ? 'cursor-not-allowed' : ''}`}
                 >
-                  Aprobado
+                  {isUpdatingStatus && currentStatus === 'aprobado' ? 'Actualizando...' : 'Aprobado'}
                 </button>
                 <button
-                  onClick={() => {
-                    const updatedTask = { ...editedTask, aprobado: undefined }
-                    setEditedTask(updatedTask)
-                    onUpdate(updatedTask)
-                  }}
-                  className={`px-4 py-2 rounded-md font-medium text-sm transition-all duration-300 ease-in-out ${
-                    editedTask.aprobado === undefined
+                  onClick={() => handleStatusChange('en-curso')}
+                  disabled={isUpdatingStatus || !isLatest}
+                  className={`px-4 py-2 rounded-md font-medium text-sm transition-all duration-300 ease-in-out disabled:opacity-50 ${
+                    currentStatus === 'en-curso'
                       ? "bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-100"
                       : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                  }`}
+                  } ${!isLatest ? 'cursor-not-allowed' : ''}`}
                 >
-                  En&nbsp;Curso
+                  {isUpdatingStatus && currentStatus === 'en-curso' ? 'Actualizando...' : 'En Curso'}
                 </button>
                 <button
-                  onClick={() => {
-                    const updatedTask = { ...editedTask, aprobado: false }
-                    setEditedTask(updatedTask)
-                    onUpdate(updatedTask)
-                  }}
-                  className={`px-4 py-2 rounded-md font-medium text-sm transition-all duration-300 ease-in-out ${
-                    editedTask.aprobado === false
+                  onClick={() => handleStatusChange('reprobado')}
+                  disabled={isUpdatingStatus || !isLatest}
+                  className={`px-4 py-2 rounded-md font-medium text-sm transition-all duration-300 ease-in-out disabled:opacity-50 ${
+                    currentStatus === 'reprobado'
                       ? "bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-100"
                       : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                  }`}
+                  } ${!isLatest ? 'cursor-not-allowed' : ''}`}
                 >
-                  Reprobado
+                  {isUpdatingStatus && currentStatus === 'reprobado' ? 'Actualizando...' : 'Reprobado'}
                 </button>
               </div>
+              
+              {/* Mensaje informativo cuando no es la última instancia */}
+              {!isLatest && userCourseData && (
+                <div className="mt-3 text-center">
+                  <p className="text-sm text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg px-3 py-2">
+                    ⚠️ Solo se puede cambiar el estado de la última instancia del curso
+                  </p>
+                </div>
+              )}
             </div>
+
+            {/* Botón RAV independiente */}
+            {userCourseData && (
+              <div className="flex flex-col items-center mb-6">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Rebaja Académica Voluntaria (RAV)
+                  </span>
+                  <button
+                    onClick={() => handleRavToggle()}
+                    disabled={isUpdatingStatus || !isLatest || !canUseRav}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      currentStatus === 'rav' 
+                        ? 'bg-gray-400' 
+                        : 'bg-gray-200 dark:bg-gray-700'
+                    } ${!canUseRav ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      currentStatus === 'rav' ? 'translate-x-6' : 'translate-x-1'
+                    }`} />
+                  </button>
+                </div>
+                
+                {/* Contador de RAV */}
+                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  RAV usados: {ravUsados || 0}/{ravDisponibles || 5}
+                </div>
+              </div>
+            )}
 
             {/* Información resumida - SIEMPRE VISIBLE */}
             <Card className="mt-6">
@@ -207,6 +393,18 @@ export default function TaskDetailModal({
                       )}
                     </div>
                   </div>
+
+                  {/* Información adicional del sistema de progreso */}
+                  {userCourseData && (
+                    <div className="flex items-center gap-2 justify-center pt-2 border-t border-gray-200 dark:border-gray-600">
+                      <span className="text-gray-500 dark:text-gray-400 text-xs">
+                        Estado del sistema: <span className="font-medium text-gray-700 dark:text-gray-200">{userCourseData.estado}</span>
+                      </span>
+                      <span className="text-gray-500 dark:text-gray-400 text-xs">
+                        ID: <span className="font-mono text-gray-700 dark:text-gray-200">{userCourseData.instanceId}</span>
+                      </span>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

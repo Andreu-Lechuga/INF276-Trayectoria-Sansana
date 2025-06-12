@@ -1,95 +1,128 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { DragDropContext, type DropResult, Droppable } from "@hello-pangea/dnd"
+import { DragDropContext, type DropResult } from "@hello-pangea/dnd"
 import KanbanBoard from "./kanban-board"
+import HorizontalCourseSelector from "./horizontal-course-selector"
+import CareerSelectionModal from "./career-selection-modal"
+import NewCareerConfirmationModal from "./new-career-confirmation-modal"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Menu, X, Search, ChevronLeft, ChevronRight, AlertCircle, GraduationCap } from "lucide-react"
+import { GraduationCap, Trash2, RotateCcw } from "lucide-react"
+import { ThemeToggle } from "@/components/theme-toggle"
 import type { Task, Column as ColumnType } from "@/types/kanban"
 import { useToast } from "@/hooks/use-toast"
-import { carreras } from "@/data/carreras"
+import { carreras, getCarreraByLink } from "@/data/carreras"
 import { getCarreraData } from "../data/data-loader"
-import TaskCard from "./task-card"
 import ColorLegend from "./color-legend"
+import { carreraStateManager } from "@/lib/carrera-state-manager"
+import { progressCacheManager } from "@/lib/progress-cache-manager"
+import { CarreraType } from "@/types/carrera-state"
+import { useUserProgress } from "@/hooks/use-user-progress"
 
-// Añadir este estilo global después de la declaración de AppContainer
 export default function AppContainer() {
-  // Reemplazar todo el bloque useEffect para los estilos globales con esta versión más simple
-  useEffect(() => {
-    // Crear un elemento de estilo
-    const styleElement = document.createElement("style")
-    styleElement.innerHTML = `
-    /* Estilos básicos para mantener la visibilidad durante el arrastre */
-    .dragging-item {
-      opacity: 0.8 !important;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
-      z-index: 9999 !important;
-    }
-    
-    /* Forzar visibilidad para elementos arrastrados */
-    [data-rbd-draggable-id] {
-      visibility: visible !important;
-    }
-    
-    /* Asegurar que el elemento arrastrado permanezca visible */
-    [data-rbd-drag-handle-draggable-id][data-rbd-dragging="true"] {
-      visibility: visible !important;
-      opacity: 0.8 !important;
-    }
-    
-    /* Estilo específico para el sidebar */
-    [data-rbd-droppable-id="sidebar"] [data-rbd-draggable-id] {
-      transition: transform 0.2s ease;
-    }
-  `
-
-    // Añadir el elemento de estilo al head
-    document.head.appendChild(styleElement)
-
-    // Limpiar al desmontar
-    return () => {
-      if (document.head.contains(styleElement)) {
-        document.head.removeChild(styleElement)
-      }
-    }
-  }, [])
-
   const { toast } = useToast()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  
+  // Estados para el nuevo sistema de gestión de carreras
+  const [currentCarrera, setCurrentCarrera] = useState<CarreraType | null>(null)
+  const [showCareerSelector, setShowCareerSelector] = useState(false)
+  const [showNewCareerConfirmation, setShowNewCareerConfirmation] = useState(false)
+  const [pendingCarrera, setPendingCarrera] = useState<CarreraType | null>(null)
+  const [isInitialized, setIsInitialized] = useState(false)
+  
+  // Estados del sistema anterior (mantenidos para compatibilidad)
   const [searchQuery, setSearchQuery] = useState("")
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
-  const [allTasks, setAllTasks] = useState<Task[]>([])
-  const [sidebarTasks, setSidebarTasks] = useState<Task[]>([])
-  const [columns, setColumns] = useState<ColumnType[]>([])
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [departmentColors, setDepartmentColors] = useState<Record<string, [string, string]>>({})
-  const [selectedCarrera, setSelectedCarrera] = useState<{ nombre: string; link: string } | null>(null)
   const [courseFilter, setCourseFilter] = useState<string>("todos")
-
-  // Nuevo estado para el modo de edición
   const [editingColumnId, setEditingColumnId] = useState<string | null>(null)
-
-  // Estado para el drag and drop
   const [draggedTaskSemestre, setDraggedTaskSemestre] = useState<number | null>(null)
+  const [departmentColors, setDepartmentColors] = useState<Record<string, [string, string]>>({})
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  
+  // Obtener ID de carrera para el hook
+  const currentCarreraId = currentCarrera ? getCarreraByLink(currentCarrera)?.id : undefined;
+
+  // Hook del sistema de progreso del usuario
+  const {
+    columns,
+    sidebarTasks: availableTasks,
+    userProgress,
+    isLoading: loading,
+    error,
+    addCourseToSemester: addCourseToSemesterHook,
+    markCourseAsFailed,
+    markCourseAsApproved,
+    markCourseAsInProgress,
+    markCourseAsRav,
+    addSemester,
+    deleteSemester,
+    refreshData,
+    resetProgress,
+    isLatestInstance,
+    checkPrerequisites,
+    removeCourseWithCascade
+  } = useUserProgress(
+    currentCarrera ? getCarreraData(currentCarrera)?.cursos || [] : [],
+    currentCarreraId || 0
+  )
+  
+  // Estados derivados
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
+
+  // Función para asegurar que siempre haya columnas mínimas
+  const ensureMinimumColumns = useCallback((cols: ColumnType[]): ColumnType[] => {
+    if (!currentCarrera) return cols
+    
+    // Si no hay columnas o están vacías, crear las columnas básicas
+    if (!cols || cols.length === 0) {
+      return [
+        {
+          id: "column-1",
+          title: "I",
+          tasks: []
+        },
+        {
+          id: "column-2", 
+          title: "II",
+          tasks: []
+        }
+      ]
+    }
+    
+    return cols
+  }, [currentCarrera])
+
+  // Columnas con garantía mínima
+  const displayColumns = ensureMinimumColumns(columns)
 
   // Debug logging
   const debugLog = (message: string, data?: any) => {
     console.log(`[AppContainer] ${message}`, data || "")
   }
 
-  // Función para convertir número a romano
-  const toRoman = (num: number): string => {
-    const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
-    return romanNumerals[num - 1] || num.toString()
-  }
+  // Inicialización del sistema al cargar la aplicación
+  useEffect(() => {
+    const initializeApp = () => {
+      try {
+        const systemState = carreraStateManager.initializeSystem()
+        
+        if (systemState.shouldShowCareerSelector) {
+          // No hay progreso existente, mostrar selector de carrera
+          setShowCareerSelector(true)
+        } else if (systemState.activeCarrera) {
+          // Hay una carrera activa, cargarla
+          setCurrentCarrera(systemState.activeCarrera)
+        }
+        
+        setIsInitialized(true)
+        debugLog("Sistema inicializado", systemState)
+      } catch (error) {
+        console.error("Error inicializando sistema:", error)
+        setShowCareerSelector(true)
+        setIsInitialized(true)
+      }
+    }
 
-  // Función para generar ID de columna basado en el número de semestre
-  const generateColumnId = (semesterNumber: number): string => {
-    return `column-${semesterNumber}`
-  }
+    initializeApp()
+  }, [])
 
   // Cargar los colores de departamentos
   useEffect(() => {
@@ -109,121 +142,14 @@ export default function AppContainer() {
     loadDepartmentColors()
   }, [])
 
-  // Inicializar la carrera seleccionada
-  useEffect(() => {
-    if (carreras.length > 0) {
-      setSelectedCarrera(carreras[0])
-    }
-  }, [])
-
-  const loadCarreraData = async (carreraLink: string) => {
-    if (!carreraLink) return
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      const dataModule = getCarreraData(carreraLink)
-
-      if (!dataModule || !dataModule.cursos || !Array.isArray(dataModule.cursos)) {
-        throw new Error("Formato de datos inválido: no se encontraron cursos")
-      }
-
-      const cursos = dataModule.cursos
-
-      const tasks: Task[] = cursos.map((curso: any) => {
-        let colorValue = null
-        if (curso.color) {
-          colorValue = curso.color
-        } else if (departmentColors && curso.departamento && departmentColors[curso.departamento]) {
-          colorValue = departmentColors[curso.departamento][0]
-        }
-
-        return {
-          id: `curso-${curso.codigo}`,
-          title: curso.nombre,
-          nombre: curso.nombre,
-          codigo: curso.codigo,
-          creditos: curso.creditos,
-          horas: curso.horas,
-          departamento: curso.departamento,
-          color: colorValue,
-          prerrequisitos: curso.prerrequisitos || [],
-          periodo: curso.periodo || "",
-          semestre: curso.semestre,
-          description: "",
-          status: "Available",
-          dueDate: null,
-          subtasks: [],
-          customFields: [],
-          createdAt: new Date().toISOString(),
-          cursoId: curso.id,
-        }
-      })
-
-      // Separar los cursos del primer semestre para el tablero
-      const primerSemestreTasks = tasks.filter((task) => task.semestre === 1)
-      // Los cursos restantes van al sidebar
-      const remainingTasks = tasks.filter((task) => task.semestre !== 1)
-
-      setAllTasks(tasks)
-      setSidebarTasks(remainingTasks)
-
-      // Inicializar columnas con cursos del primer semestre usando IDs consistentes
-      const initialColumns: ColumnType[] = [
-        {
-          id: generateColumnId(1), // "column-1"
-          title: "I",
-          tasks: primerSemestreTasks,
-        },
-        {
-          id: generateColumnId(2), // "column-2"
-          title: "II",
-          tasks: [],
-        },
-      ]
-
-      setColumns(initialColumns)
-      setLoading(false)
-
-      debugLog("Datos cargados", {
-        totalTasks: tasks.length,
-        sidebarTasks: remainingTasks.length,
-        primerSemestreTasks: primerSemestreTasks.length,
-        columns: initialColumns.length,
-      })
-    } catch (error) {
-      console.error("Error loading carrera data:", error)
-      setError(error instanceof Error ? error.message : "Error desconocido al cargar los datos")
-      setLoading(false)
-
-      toast({
-        title: "Error al cargar datos",
-        description: `No se pudieron cargar los datos de la carrera: ${error instanceof Error ? error.message : error}`,
-        variant: "destructive",
-      })
-
-      setAllTasks([])
-      setSidebarTasks([])
-      setColumns([])
-    }
-  }
-
-  // Cargar los datos de la carrera seleccionada cuando cambie
-  useEffect(() => {
-    if (selectedCarrera) {
-      loadCarreraData(selectedCarrera.link)
-    }
-  }, [selectedCarrera, departmentColors])
-
   // Actualizar el efecto de filtrado
   useEffect(() => {
-    let filtered = sidebarTasks
+    let filtered = availableTasks
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
-        (task) =>
+        (task: Task) =>
           (task.nombre && task.nombre.toLowerCase().includes(query)) ||
           (task.codigo && task.codigo.toLowerCase().includes(query)),
       )
@@ -234,417 +160,237 @@ export default function AppContainer() {
     }
 
     setFilteredTasks(filtered)
-  }, [searchQuery, courseFilter, sidebarTasks])
+  }, [searchQuery, courseFilter, availableTasks])
 
-  // Función para mover una tarea desde el sidebar a una columna
-  const moveTaskFromSidebarToColumn = useCallback(
-    (taskId: string, targetColumnId: string, targetIndex: number) => {
-      debugLog("Moviendo tarea desde sidebar a columna", { taskId, targetColumnId, targetIndex })
-
-      // Encontrar la tarea en el sidebar
-      const taskToMove = sidebarTasks.find((task) => task.id === taskId)
-      if (!taskToMove) {
-        debugLog("Tarea no encontrada en sidebar", { taskId })
-        return
+  // Manejar selección de carrera inicial
+  const handleCareerSelection = useCallback(async (carrera: CarreraType) => {
+    try {
+      debugLog("Seleccionando carrera inicial", { carrera })
+      
+      // Convertir LINK a ID
+      const carreraInfo = getCarreraByLink(carrera);
+      if (!carreraInfo) {
+        throw new Error(`Carrera ${carrera} no encontrada`);
       }
-
-      // Encontrar la columna destino
-      const targetColumn = columns.find((col) => col.id === targetColumnId)
-      if (!targetColumn) {
-        debugLog("Columna destino no encontrada", { targetColumnId })
-        return
-      }
-
-      // Crear la tarea actualizada con el nuevo status
-      const updatedTask = {
-        ...taskToMove,
-        status: targetColumn.title,
-      }
-
-      // Actualizar el estado de forma atómica
-      setSidebarTasks((prevSidebarTasks) => {
-        const newSidebarTasks = prevSidebarTasks.filter((task) => task.id !== taskId)
-        debugLog("Sidebar actualizado", { removedTaskId: taskId, remainingTasks: newSidebarTasks.length })
-        return newSidebarTasks
-      })
-
-      setColumns((prevColumns) => {
-        const newColumns = prevColumns.map((column) => {
-          if (column.id === targetColumnId) {
-            const newTasks = [...column.tasks]
-            newTasks.splice(targetIndex, 0, updatedTask)
-            debugLog("Columna actualizada", { columnId: targetColumnId, newTasksCount: newTasks.length })
-            return {
-              ...column,
-              tasks: newTasks,
-            }
-          }
-          return column
-        })
-        return newColumns
-      })
-
+      
+      // Inicializar progreso para la carrera seleccionada
+      const progress = progressCacheManager.initializeCarrera(carreraInfo.id)
+      
+      // Marcar como carrera activa
+      carreraStateManager.setActiveCarrera(carrera)
+      
+      // Actualizar estado local
+      setCurrentCarrera(carrera)
+      setShowCareerSelector(false)
+      
       toast({
-        title: "Curso añadido",
-        description: `"${taskToMove.nombre}" añadido al semestre ${targetColumn.title}`,
+        title: "Carrera iniciada",
+        description: `Se ha iniciado la trayectoria para ${carrera}`,
       })
-
-      debugLog("Tarea movida exitosamente", { taskId, from: "sidebar", to: targetColumnId })
-    },
-    [sidebarTasks, columns, toast],
-  )
-
-  // Función para mover una tarea desde una columna al sidebar
-  const moveTaskFromColumnToSidebar = useCallback(
-    (taskId: string) => {
-      debugLog("Moviendo tarea desde columna a sidebar", { taskId })
-
-      let taskToMove: Task | null = null
-      let sourceColumnId: string | null = null
-
-      // Encontrar la tarea en las columnas
-      for (const column of columns) {
-        const task = column.tasks.find((t) => t.id === taskId)
-        if (task) {
-          taskToMove = task
-          sourceColumnId = column.id
-          break
-        }
-      }
-
-      if (!taskToMove || !sourceColumnId) {
-        debugLog("Tarea no encontrada en columnas", { taskId })
-        return
-      }
-
-      // Crear la tarea actualizada para el sidebar
-      const updatedTask = {
-        ...taskToMove,
-        status: "Available",
-      }
-
-      // Actualizar el estado de forma atómica
-      setColumns((prevColumns) => {
-        const newColumns = prevColumns.map((column) => {
-          if (column.id === sourceColumnId) {
-            return {
-              ...column,
-              tasks: column.tasks.filter((task) => task.id !== taskId),
-            }
-          }
-          return column
-        })
-        debugLog("Columnas actualizadas", { removedTaskId: taskId, fromColumn: sourceColumnId })
-        return newColumns
-      })
-
-      setSidebarTasks((prevSidebarTasks) => {
-        const newSidebarTasks = [...prevSidebarTasks, updatedTask]
-        debugLog("Sidebar actualizado", { addedTaskId: taskId, totalTasks: newSidebarTasks.length })
-        return newSidebarTasks
-      })
-
+      
+      debugLog("Carrera seleccionada exitosamente", { carrera, progress })
+    } catch (error) {
+      console.error("Error seleccionando carrera:", error)
       toast({
-        title: "Curso devuelto",
-        description: `"${taskToMove.nombre}" devuelto a cursos disponibles`,
+        title: "Error",
+        description: "No se pudo inicializar la carrera seleccionada",
+        variant: "destructive",
       })
+    }
+  }, [toast])
 
-      debugLog("Tarea movida exitosamente", { taskId, from: sourceColumnId, to: "sidebar" })
-    },
-    [columns, toast],
-  )
-
-  // Función para mover tareas entre columnas
-  // En la función moveTaskBetweenColumns, reemplazar toda la lógica con esta versión más robusta:
-
-  const moveTaskBetweenColumns = useCallback(
-    (taskId: string, sourceColumnId: string, targetColumnId: string, targetIndex: number) => {
-      debugLog("Moviendo tarea entre columnas", { taskId, sourceColumnId, targetColumnId, targetIndex })
-
-      const sourceColumn = columns.find((col) => col.id === sourceColumnId)
-      const targetColumn = columns.find((col) => col.id === targetColumnId)
-
-      if (!sourceColumn || !targetColumn) {
-        debugLog("Columna no encontrada", { sourceColumnId, targetColumnId })
-        return
+  // Manejar cambio de carrera
+  const handleCareerChange = useCallback((nuevaCarrera: CarreraType) => {
+    try {
+      debugLog("Cambiando carrera", { actual: currentCarrera, nueva: nuevaCarrera })
+      
+      // Convertir LINK a ID para verificar progreso
+      const nuevaCarreraInfo = getCarreraByLink(nuevaCarrera);
+      if (!nuevaCarreraInfo) {
+        throw new Error(`Carrera ${nuevaCarrera} no encontrada`);
       }
-
-      const taskToMove = sourceColumn.tasks.find((task) => task.id === taskId)
-      if (!taskToMove) {
-        debugLog("Tarea no encontrada en columna origen", { taskId, sourceColumnId })
-        return
-      }
-
-      // Crear la tarea actualizada
-      const updatedTask = {
-        ...taskToMove,
-        status: targetColumn.title,
-      }
-
-      // Actualizar columnas de forma más segura
-      setColumns((prevColumns) => {
-        // Si es la misma columna (reordenamiento)
-        if (sourceColumnId === targetColumnId) {
-          const newColumns = prevColumns.map((column) => {
-            if (column.id === sourceColumnId) {
-              const newTasks = [...column.tasks]
-
-              // Encontrar el índice actual de la tarea
-              const currentIndex = newTasks.findIndex((task) => task.id === taskId)
-              if (currentIndex === -1) {
-                console.error("❌ Tarea no encontrada en la columna para reordenamiento", {
-                  taskId,
-                  columnId: sourceColumnId,
-                })
-                return column // Retornar sin cambios si no se encuentra la tarea
-              }
-
-              // Remover la tarea de su posición actual
-              const [removedTask] = newTasks.splice(currentIndex, 1)
-
-              // Insertar en la nueva posición
-              newTasks.splice(targetIndex, 0, { ...removedTask, status: targetColumn.title })
-
-              debugLog("Reordenamiento en misma columna", {
-                columnId: sourceColumnId,
-                from: currentIndex,
-                to: targetIndex,
-                tasksCount: newTasks.length,
-              })
-
-              return {
-                ...column,
-                tasks: newTasks,
-              }
-            }
-            return column
-          })
-
-          return newColumns
-        } else {
-          // Diferentes columnas - lógica original
-          const newColumns = prevColumns.map((column) => {
-            if (column.id === sourceColumnId) {
-              // Remover de la columna origen
-              const newTasks = column.tasks.filter((task) => task.id !== taskId)
-              debugLog("Tareas después de remover", { columnId: sourceColumnId, tasksCount: newTasks.length })
-              return {
-                ...column,
-                tasks: newTasks,
-              }
-            } else if (column.id === targetColumnId) {
-              // Añadir a la columna destino
-              const newTasks = [...column.tasks]
-              newTasks.splice(targetIndex, 0, updatedTask)
-              debugLog("Tareas después de añadir", { columnId: targetColumnId, tasksCount: newTasks.length })
-              return {
-                ...column,
-                tasks: newTasks,
-              }
-            }
-            return column
-          })
-
-          return newColumns
-        }
-      })
-
-      // Actualizar tarea seleccionada si es necesario
-      if (selectedTask && selectedTask.id === taskId) {
-        setSelectedTask(updatedTask)
-      }
-
-      // Solo mostrar toast si es movimiento entre diferentes columnas
-      if (sourceColumnId !== targetColumnId) {
+      
+      // Verificar si ya tiene progreso
+      const hasProgress = progressCacheManager.hasProgressForCarrera(nuevaCarreraInfo.id)
+      
+      if (hasProgress) {
+        // Cargar progreso existente
+        const progress = progressCacheManager.switchCarrera(nuevaCarreraInfo.id)
+        carreraStateManager.setActiveCarrera(nuevaCarrera)
+        setCurrentCarrera(nuevaCarrera)
+        
         toast({
-          title: "Curso movido",
-          description: `"${taskToMove.nombre}" movido a semestre ${targetColumn.title}`,
+          title: "Carrera cambiada",
+          description: `Se ha cargado el progreso existente de ${nuevaCarrera}`,
         })
+        
+        debugLog("Carrera cambiada a existente", { nuevaCarrera, progress })
+      } else {
+        // Mostrar confirmación para nueva carrera
+        setPendingCarrera(nuevaCarrera)
+        setShowNewCareerConfirmation(true)
+        
+        debugLog("Solicitando confirmación para nueva carrera", { nuevaCarrera })
       }
+    } catch (error) {
+      console.error("Error cambiando carrera:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo cambiar la carrera",
+        variant: "destructive",
+      })
+    }
+  }, [currentCarrera, toast])
 
-      debugLog("Tarea movida exitosamente entre columnas", { taskId, from: sourceColumnId, to: targetColumnId })
-    },
-    [columns, selectedTask, toast],
-  )
+  // Confirmar nueva carrera
+  const handleNewCareerConfirmation = useCallback(() => {
+    if (!pendingCarrera) return
+    
+    try {
+      debugLog("Confirmando nueva carrera", { carrera: pendingCarrera })
+      
+      // Convertir LINK a ID
+      const pendingCarreraInfo = getCarreraByLink(pendingCarrera);
+      if (!pendingCarreraInfo) {
+        throw new Error(`Carrera ${pendingCarrera} no encontrada`);
+      }
+      
+      // Inicializar progreso para la nueva carrera
+      const progress = progressCacheManager.initializeCarrera(pendingCarreraInfo.id)
+      carreraStateManager.setActiveCarrera(pendingCarrera)
+      
+      // Actualizar estado local
+      setCurrentCarrera(pendingCarrera)
+      setShowNewCareerConfirmation(false)
+      setPendingCarrera(null)
+      
+      toast({
+        title: "Nueva carrera iniciada",
+        description: `Se ha iniciado una nueva trayectoria para ${pendingCarrera}`,
+      })
+      
+      debugLog("Nueva carrera confirmada", { carrera: pendingCarrera, progress })
+    } catch (error) {
+      console.error("Error confirmando nueva carrera:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo inicializar la nueva carrera",
+        variant: "destructive",
+      })
+    }
+  }, [pendingCarrera, toast])
 
-  // Función para añadir curso desde sidebar al semestre correspondiente
+  // Cancelar nueva carrera
+  const handleNewCareerCancel = useCallback(() => {
+    setShowNewCareerConfirmation(false)
+    setPendingCarrera(null)
+    debugLog("Cancelada nueva carrera")
+  }, [])
+
+  // Limpiar solo la carrera actual (resetear al primer semestre)
+  const handleClearCarrera = useCallback(async () => {
+    if (!currentCarrera) return
+    
+    try {
+      debugLog("Limpiando carrera actual", { carrera: currentCarrera })
+      
+      // Resetear la carrera actual al primer semestre
+      const newProgress = progressCacheManager.resetCurrentCarreraToFirstSemester(currentCarrera)
+      
+      // Refrescar los datos para que el hook se actualice
+      refreshData()
+      
+      toast({
+        title: "Carrera reiniciada",
+        description: `Se ha reiniciado ${currentCarrera} al primer semestre`,
+      })
+      
+      debugLog("Carrera reiniciada exitosamente", { carrera: currentCarrera, newProgress })
+    } catch (error) {
+      console.error("Error reiniciando carrera:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo reiniciar la carrera",
+        variant: "destructive",
+      })
+    }
+  }, [currentCarrera, refreshData, toast])
+
+  // Limpiar todo el cache del sistema
+  const handleClearCache = useCallback(async () => {
+    if (!currentCarrera) return
+    
+    try {
+      debugLog("Limpiando todo el cache del sistema", { carrera: currentCarrera })
+      
+      // Limpiar todo el progreso del sistema y reinicializar la carrera actual
+      const newProgress = progressCacheManager.clearAllProgressAndReinitializeCurrent(currentCarrera)
+      
+      // Refrescar los datos para que el hook se actualice
+      refreshData()
+      
+      toast({
+        title: "Cache completo limpiado",
+        description: `Se ha eliminado todo el progreso. ${currentCarrera} reiniciada al primer semestre`,
+      })
+      
+      debugLog("Cache completo limpiado exitosamente", { carrera: currentCarrera, newProgress })
+    } catch (error) {
+      console.error("Error limpiando cache completo:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo limpiar el cache completo",
+        variant: "destructive",
+      })
+    }
+  }, [currentCarrera, refreshData, toast])
+
+  // Función para añadir curso usando el hook
   const addCourseToSemester = useCallback(
-    (taskId: string) => {
-      console.log("🔥 addCourseToSemester llamada con taskId:", taskId)
-      console.log("🎯 Modo de edición activo:", editingColumnId ? "SÍ" : "NO")
-      debugLog("Añadiendo curso al semestre correspondiente", { taskId, editingColumnId })
-
-      // Encontrar la tarea en el sidebar
-      const taskToMove = sidebarTasks.find((task) => task.id === taskId)
-      if (!taskToMove) {
-        console.log("❌ Tarea no encontrada en sidebar:", taskId)
-        debugLog("Tarea no encontrada en sidebar", { taskId })
+    async (taskId: string) => {
+      if (!availableTasks) return
+      
+      // Encontrar la tarea en los cursos disponibles
+      const task = availableTasks.find((t) => t.id === taskId)
+      if (!task || !task.cursoId) {
+        debugLog("Tarea no encontrada o sin cursoId", { taskId })
         return
       }
 
-      console.log("✅ Tarea encontrada:", taskToMove.nombre, "Semestre original:", taskToMove.semestre)
+      try {
+        let targetSemester = task.semestre
 
-      let targetColumn: ColumnType | null = null
-      let targetSemester: number
-      let targetColumnTitle: string
-
-      // Si estamos en modo de edición, añadir al semestre que se está editando
-      if (editingColumnId) {
-        console.log("📝 Modo edición: añadiendo al semestre en edición")
-        targetColumn = columns.find((col) => col.id === editingColumnId)
-
-        if (!targetColumn) {
-          console.log("❌ Columna en edición no encontrada:", editingColumnId)
-          debugLog("Columna en edición no encontrada", { editingColumnId })
-          toast({
-            title: "Error",
-            description: "No se pudo encontrar el semestre en edición",
-            variant: "destructive",
-          })
-          return
+        // Si estamos en modo de edición, usar el semestre que se está editando
+        if (editingColumnId) {
+          const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
+          const targetColumn = columns.find((col) => col.id === editingColumnId)
+          if (targetColumn) {
+            targetSemester = romanNumerals.indexOf(targetColumn.title) + 1
+          }
         }
 
-        targetColumnTitle = targetColumn.title
-        console.log("🎯 Añadiendo al semestre en edición:", targetColumnTitle)
-      } else {
-        // Modo normal: añadir al semestre natural del curso
-        console.log("🔄 Modo normal: añadiendo al semestre natural del curso")
-        targetSemester = taskToMove.semestre
-
-        // Buscar la columna que corresponde a ese semestre
-        const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
-        targetColumnTitle = romanNumerals[targetSemester - 1]
-
-        if (!targetColumnTitle) {
-          console.log("❌ Semestre inválido:", targetSemester)
-          debugLog("Semestre inválido", { targetSemester })
-          toast({
-            title: "Error",
-            description: `Semestre ${targetSemester} no válido`,
-            variant: "destructive",
-          })
-          return
-        }
-
-        console.log("🎯 Buscando columna para semestre:", targetColumnTitle)
-
-        // Encontrar la columna destino
-        targetColumn = columns.find((col) => col.title === targetColumnTitle)
-
-        if (!targetColumn) {
-          console.log("🏗️ Creando nueva columna para semestre:", targetColumnTitle)
-          debugLog("Columna destino no encontrada, creando nueva", { targetColumnTitle, targetSemester })
-
-          // Si la columna no existe, crearla automáticamente con ID consistente
-          const newColumn: ColumnType = {
-            id: generateColumnId(targetSemester), // Usar ID consistente basado en el semestre
-            title: targetColumnTitle,
-            tasks: [],
-          }
-
-          console.log("🆔 Nueva columna creada con ID:", newColumn.id)
-
-          // Crear la tarea actualizada
-          const updatedTask = {
-            ...taskToMove,
-            status: targetColumnTitle,
-          }
-
-          // Actualizar el estado de forma atómica
-          setSidebarTasks((prevSidebarTasks) => {
-            const newSidebarTasks = prevSidebarTasks.filter((task) => task.id !== taskId)
-            console.log("📤 Sidebar actualizado, cursos restantes:", newSidebarTasks.length)
-            return newSidebarTasks
-          })
-
-          setColumns((prevColumns) => {
-            // Insertar la nueva columna en la posición correcta
-            const newColumns = [...prevColumns]
-
-            // Encontrar la posición correcta para insertar
-            let insertIndex = newColumns.length
-            for (let i = 0; i < newColumns.length; i++) {
-              const columnSemester = romanNumerals.indexOf(newColumns[i].title) + 1
-              if (columnSemester > targetSemester) {
-                insertIndex = i
-                break
-              }
-            }
-
-            // Insertar la nueva columna con la tarea
-            const columnWithTask = {
-              ...newColumn,
-              tasks: [updatedTask],
-            }
-            newColumns.splice(insertIndex, 0, columnWithTask)
-
-            console.log("🏗️ Nueva columna creada y tarea añadida")
-            return newColumns
-          })
-
-          toast({
-            title: "Semestre creado",
-            description: `Semestre ${targetColumnTitle} creado y curso "${taskToMove.nombre}" añadido`,
-          })
-
-          console.log("✅ Proceso completado - nueva columna creada")
-          return
-        }
-      }
-
-      console.log("📍 Columna encontrada:", targetColumn.title, "ID:", targetColumn.id)
-
-      // Crear la tarea actualizada con el nuevo status
-      const updatedTask = {
-        ...taskToMove,
-        status: targetColumn.title,
-      }
-
-      // Actualizar el estado de forma atómica
-      setSidebarTasks((prevSidebarTasks) => {
-        const newSidebarTasks = prevSidebarTasks.filter((task) => task.id !== taskId)
-        console.log("📤 Sidebar actualizado, cursos restantes:", newSidebarTasks.length)
-        debugLog("Sidebar actualizado", { removedTaskId: taskId, remainingTasks: newSidebarTasks.length })
-        return newSidebarTasks
-      })
-
-      setColumns((prevColumns) => {
-        const newColumns = prevColumns.map((column) => {
-          if (column.id === targetColumn!.id) {
-            const newTasks = [...column.tasks, updatedTask] // Añadir al final
-            console.log("📥 Columna actualizada, cursos totales:", newTasks.length)
-            debugLog("Columna actualizada", { columnId: targetColumn!.id, newTasksCount: newTasks.length })
-            return {
-              ...column,
-              tasks: newTasks,
-            }
-          }
-          return column
+        // Usar el hook para añadir el curso
+        await addCourseToSemesterHook(task.cursoId, targetSemester)
+        
+        debugLog("Curso añadido exitosamente", { taskId, cursoId: task.cursoId, targetSemester })
+      } catch (error) {
+        console.error("Error añadiendo curso:", error)
+        toast({
+          title: "Error",
+          description: "No se pudo añadir el curso",
+          variant: "destructive",
         })
-        return newColumns
-      })
-
-      toast({
-        title: "Curso añadido",
-        description: `"${taskToMove.nombre}" añadido al semestre ${targetColumn.title}`,
-      })
-
-      console.log("✅ Proceso completado exitosamente")
-      debugLog("Tarea añadida exitosamente al semestre correspondiente", {
-        taskId,
-        to: targetColumn.id,
-        editingMode: !!editingColumnId,
-      })
+      }
     },
-    [sidebarTasks, columns, toast, editingColumnId], // Añadir editingColumnId como dependencia
+    [availableTasks, columns, editingColumnId, addCourseToSemesterHook, toast],
   )
 
   // Función para encontrar una tarea por ID en todas las fuentes
   const findTaskById = useCallback(
     (taskId: string): Task | null => {
-      // Buscar en sidebar
-      const sidebarTask = sidebarTasks.find((task) => task.id === taskId)
-      if (sidebarTask) return sidebarTask
+      // Buscar en cursos disponibles
+      const availableTask = availableTasks.find((task) => task.id === taskId)
+      if (availableTask) return availableTask
 
       // Buscar en columnas
       for (const column of columns) {
@@ -654,7 +400,7 @@ export default function AppContainer() {
 
       return null
     },
-    [sidebarTasks, columns],
+    [availableTasks, columns],
   )
 
   // Manejar drag and drop global
@@ -679,353 +425,261 @@ export default function AppContainer() {
         return
       }
 
-      // Si el origen es el sidebar, no permitir el arrastre
-      if (source.droppableId === "sidebar") {
-        debugLog("Drag cancelado - no se permite arrastrar desde sidebar")
-        return
-      }
-
-      try {
-        // Caso 1: Mover desde columna a sidebar
-        if (source.droppableId !== "sidebar" && destination.droppableId === "sidebar") {
-          moveTaskFromColumnToSidebar(draggableId)
-        }
-        // Caso 2: Mover entre columnas (incluyendo reordenamiento en la misma columna)
-        else if (source.droppableId !== "sidebar" && destination.droppableId !== "sidebar") {
-          // Si es la misma columna, permitir reordenamiento
-          if (source.droppableId === destination.droppableId) {
-            moveTaskBetweenColumns(draggableId, source.droppableId, destination.droppableId, destination.index)
-          } else {
-            // Si son columnas diferentes, verificar que el curso pertenezca al semestre destino
-            const draggedTask = findTaskById(draggableId)
-            if (!draggedTask) {
-              debugLog("Tarea no encontrada para validación", { draggableId })
-              toast({
-                title: "Error",
-                description: "No se pudo encontrar el curso",
-                variant: "destructive",
-              })
-              return
-            }
-
-            // Determinar el semestre de la columna destino
-            const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
-            const targetColumn = columns.find((col) => col.id === destination.droppableId)
-
-            if (!targetColumn) {
-              debugLog("Columna destino no encontrada", { destinationId: destination.droppableId })
-              return
-            }
-
-            const targetColumnSemester = romanNumerals.indexOf(targetColumn.title) + 1
-
-            // Solo permitir el movimiento si el curso pertenece al semestre destino
-            if (draggedTask.semestre === targetColumnSemester) {
-              moveTaskBetweenColumns(draggableId, source.droppableId, destination.droppableId, destination.index)
-            } else {
-              debugLog("Movimiento bloqueado - curso no pertenece al semestre destino", {
-                taskSemester: draggedTask.semestre,
-                targetSemester: targetColumnSemester,
-                taskName: draggedTask.nombre,
-              })
-
-              toast({
-                title: "Movimiento no permitido",
-                description: `El curso "${draggedTask.nombre}" pertenece al semestre ${draggedTask.semestre}, no al semestre ${targetColumn.title}`,
-                variant: "destructive",
-              })
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error en handleDragEnd:", error)
-        toast({
-          title: "Error",
-          description: "Ocurrió un error al mover el curso",
-          variant: "destructive",
-        })
+      // Por ahora, solo permitir drag desde sidebar a columnas
+      if (source.droppableId === "sidebar" && destination.droppableId !== "sidebar") {
+        // Añadir curso al semestre destino
+        addCourseToSemester(draggableId)
       }
     },
-    [moveTaskFromColumnToSidebar, moveTaskBetweenColumns, toast, findTaskById, columns],
+    [addCourseToSemester],
   )
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen)
-  }
 
   // Función para iniciar edición de semestre
   const startEditingSemester = useCallback((columnId: string) => {
     debugLog("Iniciando edición de semestre", { columnId })
     setEditingColumnId(columnId)
-    setIsSidebarOpen(true)
   }, [])
 
   // Función para terminar edición de semestre
   const finishEditingSemester = useCallback(() => {
     debugLog("Terminando edición de semestre", { editingColumnId })
     setEditingColumnId(null)
-    setIsSidebarOpen(false)
   }, [editingColumnId])
 
-  // Función para actualizar las columnas desde KanbanBoard
-  const handleColumnsUpdate = useCallback((updatedColumns: ColumnType[]) => {
-    debugLog("Actualizando columnas desde KanbanBoard", { columnsCount: updatedColumns.length })
-    setColumns(updatedColumns)
-  }, [])
+  // Función para mover curso de vuelta al sidebar (eliminar del semestre)
+  const handleMoveTaskToSidebar = useCallback(async (taskId: string) => {
+    try {
+      debugLog("Moviendo curso de vuelta al sidebar", { taskId })
+      
+      // Encontrar la tarea en las columnas para obtener su instanceId
+      let taskToRemove: Task | null = null
+      for (const column of displayColumns) {
+        const foundTask = column.tasks.find(task => task.id === taskId)
+        if (foundTask) {
+          taskToRemove = foundTask
+          break
+        }
+      }
+      
+      if (!taskToRemove || !taskToRemove.instanceId) {
+        debugLog("Tarea no encontrada o sin instanceId", { taskId })
+        toast({
+          title: "Error",
+          description: "No se pudo encontrar el curso a eliminar",
+          variant: "destructive",
+        })
+        return
+      }
+      
+      // Usar la función del hook para eliminar el curso
+      await removeCourseWithCascade(taskToRemove.instanceId)
+      
+      debugLog("Curso movido al sidebar exitosamente", { taskId, instanceId: taskToRemove.instanceId })
+    } catch (error) {
+      console.error("Error moviendo curso al sidebar:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo mover el curso de vuelta al sidebar",
+        variant: "destructive",
+      })
+    }
+  }, [displayColumns, removeCourseWithCascade, toast])
 
-  // Obtener el título del semestre en edición
-  const getEditingSemesterTitle = () => {
-    if (!editingColumnId) return ""
-    const column = columns.find((col) => col.id === editingColumnId)
-    return column ? column.title : ""
-  }
+  // Función para manejar cambios en las columnas (añadir/eliminar semestres)
+  const handleColumnsChange = useCallback(async (newColumns: ColumnType[]) => {
+    debugLog("Cambios en columnas", { newColumns })
+    
+    // Comparar con las columnas actuales para determinar qué cambió
+    const currentColumnIds = displayColumns.map(col => col.id)
+    const newColumnIds = newColumns.map(col => col.id)
+    
+    // Detectar si se añadió una columna
+    const addedColumns = newColumnIds.filter(id => !currentColumnIds.includes(id))
+    if (addedColumns.length > 0) {
+      debugLog("Columna añadida detectada")
+      await addSemester()
+      return
+    }
+    
+    // Detectar si se eliminó una columna
+    const removedColumns = currentColumnIds.filter(id => !newColumnIds.includes(id))
+    if (removedColumns.length > 0) {
+      debugLog("Columna eliminada detectada", { removedColumns })
+      for (const columnId of removedColumns) {
+        await deleteSemester(columnId)
+      }
+      return
+    }
+    
+    debugLog("No se detectaron cambios de estructura en las columnas")
+  }, [displayColumns, addSemester, deleteSemester])
 
-  if (!selectedCarrera) {
+  // Mostrar loading mientras se inicializa
+  if (!isInitialized) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-gray-950">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100 mx-auto mb-4"></div>
-          <p className="text-gray-700 dark:text-gray-300">Cargando carreras...</p>
+          <p className="text-gray-700 dark:text-gray-300">Inicializando sistema...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <DragDropContext
-      onDragEnd={handleDragEnd}
-      onDragStart={(start) => {
-        console.log("🚀 Drag iniciado:", start.draggableId)
+    <>
+      <DragDropContext
+        onDragEnd={handleDragEnd}
+        onDragStart={(start) => {
+          console.log("🚀 Drag iniciado:", start.draggableId)
 
-        // Encontrar la tarea que se está arrastrando
-        const draggedTask = findTaskById(start.draggableId)
-        if (draggedTask) {
-          console.log("📚 Tarea encontrada:", draggedTask.nombre, "Semestre:", draggedTask.semestre)
-          setDraggedTaskSemestre(draggedTask.semestre)
-        } else {
-          console.log("❌ Tarea no encontrada:", start.draggableId)
-          setDraggedTaskSemestre(null)
-        }
-
-        // Añadir una clase al elemento que se está arrastrando para asegurar que permanezca visible
-        const draggableElement = document.querySelector(`[data-rbd-draggable-id="${start.draggableId}"]`)
-        if (draggableElement) {
-          draggableElement.classList.add("task-drag-preview")
-        }
-
-        // Añadir una clase al body para indicar que se está arrastrando
-        document.body.classList.add("is-dragging")
-      }}
-      onDragUpdate={(update) => {
-        // Actualizar la posición del elemento arrastrado si es necesario
-      }}
-    >
-      <div className="flex flex-row-reverse h-screen bg-slate-50 dark:bg-gray-950">
-        {/* Sidebar - Mobile overlay */}
-        {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={toggleSidebar} />}
-
-        {/* Sidebar */}
-        <aside
-          className={`fixed lg:relative inset-y-0 right-0 z-50 w-64 bg-white dark:bg-gray-800 border-l dark:border-gray-700 transform transition-all duration-200 ease-in-out ${
-            isSidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0 lg:overflow-hidden"
-          }`}
-        >
-          <div className="flex items-center justify-between h-16 px-4 border-b dark:border-gray-700">
-            <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
-              <X className="h-5 w-5" />
-            </Button>
-
-            {/* Nuevo header del sidebar */}
-            {editingColumnId ? (
-              <div className="flex items-center justify-between w-full">
-                <span className="text-sm font-medium dark:text-gray-200">Semestre: {getEditingSemesterTitle()}</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={finishEditingSemester}
-                  className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
-                >
-                  Terminar
-                </Button>
-              </div>
-            ) : (
-              <div className="flex-1 text-right">Cursos ({filteredTasks.length})</div>
-            )}
-          </div>
-
-          {/* Search bar at the top */}
-          <div className="p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Buscar..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={`pl-9 bg-gray-100 dark:bg-gray-700 border-0 rounded-full transition-all ${
-                  isSidebarOpen ? "w-full" : "w-0 p-0 opacity-0 lg:hidden"
-                }`}
-              />
-            </div>
-
-            <div className="mt-4">
-              <select
-                className="w-full px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                value={courseFilter}
-                onChange={(e) => setCourseFilter(e.target.value)}
-              >
-                <option value="todos">Todos</option>
-                <option value="sugeridos">Sugeridos</option>
-                <option value="sin-desbloquear">Sin Desbloquear</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Task cards container - Área droppable */}
-          <Droppable droppableId="sidebar">
-            {(provided, snapshot) => (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className={`flex-1 p-2 overflow-auto ${isSidebarOpen ? "" : "hidden lg:block"} ${
-                  snapshot.isDraggingOver ? "bg-blue-50 dark:bg-blue-900/20" : ""
-                }`}
-                style={{ maxHeight: "calc(100vh - 140px)" }}
-                data-is-droppable="true"
-              >
-                {loading ? (
-                  <div className="text-center py-4 text-gray-500 dark:text-gray-400">Cargando cursos...</div>
-                ) : error ? (
-                  <div className="text-center py-4 text-red-500 dark:text-red-400 flex flex-col items-center">
-                    <AlertCircle className="h-6 w-6 mb-2" />
-                    <p>Error al cargar los cursos</p>
-                    <p className="text-xs mt-1">{error}</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-2"
-                      onClick={() => selectedCarrera && loadCarreraData(selectedCarrera.link)}
-                    >
-                      Reintentar
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {filteredTasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className={`${selectedTask?.id === task.id ? "ring-2 ring-blue-500 rounded-md" : ""}`}
-                      >
-                        <TaskCard
-                          task={task}
-                          onClick={() => {
-                            console.log("🖱️ Click en TaskCard, taskId:", task.id)
-                            addCourseToSemester(task.id)
-                          }}
-                          onDuplicate={() => {}}
-                          className="mb-2"
-                          showHoverPlus={true}
-                          allTasks={allTasks} // Pasar allTasks
-                        />
-                      </div>
+          // Encontrar la tarea que se está arrastrando
+          const draggedTask = findTaskById(start.draggableId)
+          if (draggedTask) {
+            console.log("📚 Tarea encontrada:", draggedTask.nombre, "Semestre:", draggedTask.semestre)
+            setDraggedTaskSemestre(draggedTask.semestre)
+          } else {
+            console.log("❌ Tarea no encontrada:", start.draggableId)
+            setDraggedTaskSemestre(null)
+          }
+        }}
+      >
+        <div className="flex h-screen bg-slate-50 dark:bg-gray-950">
+          {/* Main content */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Header */}
+            <header className="h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex items-center justify-between px-4 lg:px-6">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center">
+                  <GraduationCap className="h-6 w-6 text-gray-800 dark:text-gray-200" />
+                </div>
+                {currentCarrera && (
+                  <select
+                    className="ml-4 px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                    value={currentCarrera}
+                    onChange={(e) => handleCareerChange(e.target.value as CarreraType)}
+                    disabled={loading}
+                  >
+                    {carreras.map((carrera) => (
+                      <option key={carrera.link} value={carrera.link}>
+                        {carrera.nombre}
+                      </option>
                     ))}
-                    {provided.placeholder}
-                    {filteredTasks.length === 0 && !loading && !error && (
-                      <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-                        {searchQuery ? "No se encontraron cursos" : "No hay cursos disponibles"}
-                      </div>
-                    )}
-                  </div>
+                  </select>
                 )}
               </div>
-            )}
-          </Droppable>
-        </aside>
-
-        {/* Main content */}
-        <div className="flex-1 flex flex-col overflow-hidden relative">
-          {/* Toggle button outside sidebar */}
-          <div className="absolute top-3 right-0 z-50 lg:block hidden">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={toggleSidebar}
-              className="rounded-full shadow-md bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 mr-2"
-            >
-              {isSidebarOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </Button>
-          </div>
-
-          {/* Header */}
-          <header className="h-16 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex items-center justify-between px-4 lg:px-6">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center">
-                <GraduationCap className="h-6 w-6 text-gray-800 dark:text-gray-200" />
+              
+              {/* Título centrado */}
+              <div className="absolute left-1/2 transform -translate-x-1/2">
+                <h1 className="text-xl font-bold text-gray-800 dark:text-gray-200">Trayectoria Sansana</h1>
               </div>
-              <select
-                className="ml-4 px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                value={selectedCarrera?.link || ""}
-                onChange={(e) => {
-                  const carrera = carreras.find((c) => c.link === e.target.value)
-                  if (carrera) {
-                    setSelectedCarrera(carrera)
-                  }
-                }}
-                disabled={loading}
-              >
-                {carreras.map((carrera) => (
-                  <option key={carrera.link} value={carrera.link}>
-                    {carrera.nombre}
-                  </option>
-                ))}
-              </select>
+              
+              {/* Botones de control */}
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                {currentCarrera && (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleClearCarrera}
+                      className="text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400"
+                    >
+                      <RotateCcw className="h-4 w-4 mr-1" />
+                      Limpiar Carrera
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleClearCache}
+                      className="text-red-600 hover:text-red-700 border-red-300 hover:border-red-400"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Limpiar Cache
+                    </Button>
+                  </>
+                )}
+              </div>
+            </header>
+
+            {/* Main content area */}
+            <main className="flex-1 flex flex-col overflow-hidden">
+              {error ? (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">Error al cargar los datos</h2>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4 text-center max-w-md px-4">{error}</p>
+                  <Button onClick={refreshData}>Reintentar</Button>
+                </div>
+              ) : (
+                <>
+                  {/* Kanban Board */}
+                  <div className="flex-1 overflow-auto">
+                    <KanbanBoard
+                      columns={displayColumns}
+                      onColumnsChange={handleColumnsChange}
+                      onTaskSelect={setSelectedTask}
+                      selectedTask={selectedTask}
+                      onTaskMoveToSidebar={handleMoveTaskToSidebar}
+                      onStartEditingSemester={startEditingSemester}
+                      draggedTaskSemestre={draggedTaskSemestre}
+                      editingColumnId={editingColumnId}
+                      allTasks={[]} // No necesario con el nuevo sistema
+                      userProgress={userProgress}
+                      onMarkAsApproved={markCourseAsApproved}
+                      onMarkAsFailed={markCourseAsFailed}
+                      onMarkAsPending={markCourseAsInProgress}
+                      onMarkAsRav={markCourseAsRav}
+                      isLatestInstance={isLatestInstance}
+                    />
+                  </div>
+
+                  {/* Selector Horizontal de Cursos */}
+                  <HorizontalCourseSelector
+                    tasks={filteredTasks}
+                    onTaskSelect={(task) => {
+                      console.log("🖱️ Click en HorizontalCourseSelector, taskId:", task.id)
+                      addCourseToSemester(task.id)
+                    }}
+                    onTaskDragStart={(task) => {
+                      console.log("🚀 Drag iniciado desde HorizontalCourseSelector:", task.id)
+                      setDraggedTaskSemestre(task.semestre)
+                    }}
+                    checkPrerequisites={checkPrerequisites}
+                    isOpen={editingColumnId !== null}
+                    onClose={finishEditingSemester}
+                  />
+                </>
+              )}
+            </main>
+
+            {/* Leyenda de colores */}
+            <div className="px-4 py-2">
+              {departmentColors && Object.keys(departmentColors).length > 0 && <ColorLegend colors={departmentColors} />}
             </div>
 
-            <div className="flex items-center">
-              <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </div>
-          </header>
-
-          {/* Main content area */}
-          <main className="flex-1 overflow-auto">
-            {error ? (
-              <div className="flex flex-col items-center justify-center h-full">
-                <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
-                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">Error al cargar los datos</h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-4 text-center max-w-md px-4">{error}</p>
-                <Button onClick={() => selectedCarrera && loadCarreraData(selectedCarrera.link)}>Reintentar</Button>
-              </div>
-            ) : (
-              <KanbanBoard
-                columns={columns}
-                onColumnsChange={handleColumnsUpdate}
-                onTaskSelect={setSelectedTask}
-                selectedTask={selectedTask}
-                onTaskMoveToSidebar={moveTaskFromColumnToSidebar}
-                toggleSidebar={() => setIsSidebarOpen(true)}
-                onStartEditingSemester={startEditingSemester}
-                draggedTaskSemestre={draggedTaskSemestre}
-                editingColumnId={editingColumnId}
-                allTasks={allTasks} // Pasar allTasks
-              />
-            )}
-          </main>
-
-          {/* Leyenda de colores */}
-          <div className="px-4 py-2">
-            {departmentColors && Object.keys(departmentColors).length > 0 && <ColorLegend colors={departmentColors} />}
+            {/* Footer */}
+            <footer className="h-12 bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex items-center justify-center px-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                © {new Date().getFullYear()} Trayectoria Sansana. Todos los derechos reservados.
+              </p>
+            </footer>
           </div>
-
-          {/* Footer */}
-          <footer className="h-12 bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex items-center justify-center px-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              © {new Date().getFullYear()} Trayectoria Sansana. Todos los derechos reservados.
-            </p>
-          </footer>
         </div>
-      </div>
-    </DragDropContext>
+      </DragDropContext>
+
+      {/* Modales */}
+      <CareerSelectionModal
+        isOpen={showCareerSelector}
+        onCareerSelect={handleCareerSelection}
+        onClose={() => setShowCareerSelector(false)}
+      />
+
+      <NewCareerConfirmationModal
+        isOpen={showNewCareerConfirmation}
+        carrera={pendingCarrera}
+        onConfirm={handleNewCareerConfirmation}
+        onCancel={handleNewCareerCancel}
+      />
+    </>
   )
 }

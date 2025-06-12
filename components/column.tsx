@@ -34,6 +34,7 @@ interface ColumnProps {
   draggedTaskSemestre?: number | null
   editingColumnId?: string | null
   allTasks?: Task[] // Añadir esta prop
+  getUserCourseData?: (task: Task) => { estado: any; instanceId: string; vtr: number } | undefined
 }
 
 export default function Column({
@@ -47,6 +48,7 @@ export default function Column({
   draggedTaskSemestre,
   editingColumnId,
   allTasks = [], // Añadir esta prop con valor por defecto
+  getUserCourseData,
 }: ColumnProps) {
   const [isAddingTask, setIsAddingTask] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState("")
@@ -75,6 +77,7 @@ export default function Column({
       subtasks: [],
       customFields: [],
       createdAt: new Date().toISOString(),
+      vtr: 0,
     }
 
     onAddTask(column.id, newTask)
@@ -213,6 +216,7 @@ export default function Column({
                           editingMode={isEditingThisColumn}
                           onRemove={isEditingThisColumn ? () => handleMoveToSidebar(task.id) : undefined}
                           allTasks={allTasks} // Pasar allTasks
+                          userCourseData={getUserCourseData ? getUserCourseData(task) : undefined}
                         />
                       </div>
                     </div>

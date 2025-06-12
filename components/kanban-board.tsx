@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import type { Task, Column as ColumnType } from "@/types/kanban"
+import type { UserProgress, CourseOperationResult } from "@/types/user-progress"
 import YearGroup from "./year-group"
 import SemesterNavigation from "./semester-navigation"
 
@@ -22,6 +23,13 @@ interface KanbanBoardProps {
   draggedTaskSemestre?: number | null
   editingColumnId?: string | null
   allTasks?: Task[]
+  // Nuevas props para el sistema de progreso
+  userProgress?: UserProgress | null
+  onMarkAsApproved?: (instanceId: string) => Promise<CourseOperationResult>
+  onMarkAsFailed?: (instanceId: string) => Promise<CourseOperationResult>
+  onMarkAsPending?: (instanceId: string) => Promise<CourseOperationResult>
+  onMarkAsRav?: (instanceId: string) => Promise<CourseOperationResult>
+  isLatestInstance?: (instanceId: string) => boolean
 }
 
 export default function KanbanBoard({
@@ -35,6 +43,12 @@ export default function KanbanBoard({
   draggedTaskSemestre,
   editingColumnId,
   allTasks = [],
+  userProgress,
+  onMarkAsApproved,
+  onMarkAsFailed,
+  onMarkAsPending,
+  onMarkAsRav,
+  isLatestInstance,
 }: KanbanBoardProps) {
   const { toast } = useToast()
   const [localSelectedTask, setLocalSelectedTask] = useState<Task | null>(null)
@@ -176,10 +190,34 @@ export default function KanbanBoard({
       debugLog("Eliminando columna", { columnId })
 
       const column = columns.find((col) => col.id === columnId)
-      if (column && column.tasks.length > 0) {
+      if (!column) {
         toast({
-          title: "No se puede eliminar la columna",
-          description: "Por favor mueve o elimina todas las tareas de esta columna primero",
+          title: "Error",
+          description: "No se encontró el semestre a eliminar",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Verificar que el semestre esté vacío
+      if (column.tasks.length > 0) {
+        toast({
+          title: "No se puede eliminar el semestre",
+          description: "Por favor mueve o elimina todas las materias de este semestre primero",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Verificar que solo se pueda eliminar el último semestre
+      const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
+      const currentSemesterIndex = romanNumerals.indexOf(column.title)
+      const maxSemesterIndex = Math.max(...columns.map(col => romanNumerals.indexOf(col.title)))
+
+      if (currentSemesterIndex !== maxSemesterIndex) {
+        toast({
+          title: "No se puede eliminar este semestre",
+          description: `Solo se puede eliminar el último semestre (${romanNumerals[maxSemesterIndex]}) para mantener la coherencia en la numeración`,
           variant: "destructive",
         })
         return
@@ -188,8 +226,8 @@ export default function KanbanBoard({
       onColumnsChange(columns.filter((col) => col.id !== columnId))
 
       toast({
-        title: "Columna eliminada",
-        description: `La columna "${column?.title}" ha sido eliminada`,
+        title: "Semestre eliminado",
+        description: `El semestre "${column.title}" ha sido eliminado`,
       })
     },
     [columns, onColumnsChange, toast],
@@ -205,6 +243,27 @@ export default function KanbanBoard({
     },
     [onTaskSelect],
   )
+
+  // Función para obtener los datos del usuario para un curso específico
+  const getUserCourseData = useCallback((task: Task) => {
+    if (!userProgress || !task.instanceId) {
+      return undefined
+    }
+
+    // Buscar el curso en los semestres del progreso del usuario
+    for (const [semestreId, semestreData] of Object.entries(userProgress.semestres)) {
+      const userCourse = semestreData.cursos.find(c => c.instanceId === task.instanceId)
+      if (userCourse) {
+        return {
+          estado: userCourse.estado,
+          instanceId: userCourse.instanceId,
+          vtr: userCourse.vtr
+        }
+      }
+    }
+
+    return undefined
+  }, [userProgress])
 
   const renderBoardContent = () => (
     <div className="flex gap-6 h-full overflow-x-auto pb-4">
@@ -234,6 +293,7 @@ export default function KanbanBoard({
                 draggedTaskSemestre={draggedTaskSemestre}
                 editingColumnId={editingColumnId}
                 allTasks={allTasks}
+                getUserCourseData={getUserCourseData}
               />
             ))}
           </YearGroup>
@@ -268,15 +328,13 @@ export default function KanbanBoard({
   return (
     <div className="flex flex-col h-full bg-slate-50 dark:bg-gray-950">
       <header className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-4 shadow-sm">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Trayectoria Sansana</h1>
-        </div>
-
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="board">Malla Personal</TabsTrigger>
-            <TabsTrigger value="automation">Notas</TabsTrigger>
-          </TabsList>
+          <div className="flex justify-center">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="board">Malla Personal</TabsTrigger>
+              <TabsTrigger value="automation">Notas</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="board" className="mt-4">
             {renderBoardContent()}
@@ -301,6 +359,14 @@ export default function KanbanBoard({
           onDelete={deleteTask}
           onDuplicate={() => {}}
           columns={columns}
+          userCourseData={getUserCourseData(localSelectedTask)}
+          onMarkAsApproved={onMarkAsApproved}
+          onMarkAsFailed={onMarkAsFailed}
+          onMarkAsPending={onMarkAsPending}
+          onMarkAsRav={onMarkAsRav}
+          isLatestInstance={isLatestInstance}
+          ravUsados={userProgress?.ravUsados}
+          ravDisponibles={userProgress?.ravDisponibles}
         />
       )}
     </div>

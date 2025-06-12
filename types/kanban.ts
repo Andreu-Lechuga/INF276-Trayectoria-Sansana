@@ -23,6 +23,11 @@ export interface Task {
   aprobado?: boolean
   cursoId?: number
   gradeData?: GData // Nuevo campo para almacenar datos de notas
+  // Campos del sistema de progreso
+  estado?: 'en-curso' | 'aprobado' | 'reprobado' | 'rav'
+  instanceId?: string
+  esCopiaPorReprobacion?: boolean
+  cursoOriginalInstanceId?: string
 }
 
 export interface Subtask {

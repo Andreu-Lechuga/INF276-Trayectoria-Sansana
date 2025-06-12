@@ -10,6 +10,135 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  
+  /* Scrollbar invisible para el selector horizontal de cursos */
+  .scrollbar-hide {
+    /* Firefox */
+    scrollbar-width: none;
+    /* IE and Edge */
+    -ms-overflow-style: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    /* Chrome, Safari and Opera */
+    display: none;
+  }
+  
+  /* Diseño de rectángulo + círculo + check para cursos aprobados */
+  .task-card-approved::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #5FCC7A;
+    border: 1pt solid black;
+    mask: radial-gradient(circle 42px at center, transparent 42px, black 42px);
+    -webkit-mask: radial-gradient(circle 42px at center, transparent 42px, black 42px);
+    z-index: 25;
+    pointer-events: none;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+  }
+  
+  .task-card-approved::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 84px;
+    height: 84px;
+    background-color: transparent;
+    border-radius: 50%;
+    border: 1pt solid black;
+    z-index: 26;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .task-card-approved:hover::before,
+  .task-card-approved:hover::after {
+    opacity: 0;
+  }
+  
+  .task-card-failed::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #EF4444;
+    border: 1pt solid black;
+    mask: radial-gradient(circle 42px at center, transparent 42px, black 42px);
+    -webkit-mask: radial-gradient(circle 42px at center, transparent 42px, black 42px);
+    z-index: 25;
+    pointer-events: none;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+  }
+  
+  .task-card-failed::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 84px;
+    height: 84px;
+    background-color: transparent;
+    border-radius: 50%;
+    border: 1pt solid black;
+    z-index: 26;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .task-card-failed:hover::before,
+  .task-card-failed:hover::after {
+    opacity: 0;
+  }
+  
+  /* Diseño para cursos con RAV - fondo gris con flecha derecha negra */
+  .task-card-rav::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #282828;
+    border: 1pt solid black;
+    mask: radial-gradient(circle 42px at center, transparent 42px, black 42px);
+    -webkit-mask: radial-gradient(circle 42px at center, transparent 42px, black 42px);
+    z-index: 25;
+    pointer-events: none;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+  }
+  
+  .task-card-rav::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 84px;
+    height: 84px;
+    background-color: transparent;
+    border-radius: 50%;
+    border: 1pt solid black;
+    z-index: 26;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .task-card-rav:hover::before,
+  .task-card-rav:hover::after {
+    opacity: 0;
+  }
 }
 
 @layer base {
@@ -87,6 +216,7 @@ body {
 @layer base {
   * {
     @apply border-border;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
   }
   body {
     @apply bg-background text-foreground;
