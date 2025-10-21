@@ -1,0 +1,12 @@
+{
+  "PC": ["#80C4C8", "Plan Común"],
+  "FI": ["#8EAAD7", "Fundamentos de Informática"],
+  "HUM": ["#D8DB8E", "Humanistas, libres y deportes"],
+  "TIN": ["#E5A5B8", "Transversal e Integración"],
+  "SD": ["#D48D8F", "Sistemas de decisión informática"],
+  "IND": ["#B5D4E8", "Industrias"],
+  "IS": ["#FEF28A", "Ingeniería de Software"],
+  "TIC": ["#B8ABD2", "Infraestructura TIC"],
+  "AN": ["#80D6AE", "Análisis Numérico"],
+  "ELEC": ["#FBCA8F", "Electivos Informática"]
+}
