@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
+  basePath: '/INF276-Trayectoria-Sansana',
+  assetPrefix: '/INF276-Trayectoria-Sansana/',
   eslint: {
     ignoreDuringBuilds: true,
   },
